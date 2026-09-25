@@ -2,7 +2,7 @@
 
 ## Problema
 
-O condomínio precisa de um sistema centralizado para organizar operações entre entre moradores, administração, funcionários.
+O condomínio precisa de um sistema centralizado para organizar operações  entre moradores, administração, funcionários.
 
 Atividades como reservas de espaços, abertura de chamados, avisos e registro de ocorrência podem ficar distribuídas em diferentes meios, dificultando o acompanhamento e o controle
 
