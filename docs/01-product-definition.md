@@ -2,14 +2,13 @@
 
 ## Problema
 
-O condomínio precisa de um sistema centralizado para organizar operações  entre moradores, administração, funcionários.
-
-Atividades como reservas de espaços, abertura de chamados, avisos e registro de ocorrência podem ficar distribuídas em diferentes meios, dificultando o acompanhamento e o controle
+A gestão de condomínios sofre com a desconexão entre a administração digital e a infraestrutura física. Atividades como reservas de espaços e registros de chamados operam em silos manuais, gerando lentidão e falhas. Paralelamente, o monitoramento de recursos físicos críticos (reservatórios, bombas, acessos) depende de inspeção humana periódica. Essa fragmentação resulta em baixa eficiência, risco de falhas de segurança e ausência de dados em tempo real para a tomada de decisão da administração.
 
 ## Objetivo
 
-Criar um sistema para centralizar a gestão operacional e a comunicação do condomínio, permitindo que moradores realizem solicitações, registrem ocorrências, reservem espaço e acompanhem o andamento de suas demandas. Permitindo também que o administrador gerencie avisos, ocorrências, solicitações, reservas de espaços e consiga visualizar um dashboard com as informações do essenciais do sistema. Permitindo também que funcionários gerencie solicitações, ocorrências e visualizar um dashboard com informações das mesmas.
+Criar uma plataforma de gestão distribuída e em tempo real para condomínios. O sistema deve centralizar operações de Moradores, Administração e Funcionários em um único ambiente, gerenciando chamados, ocorrências e reservas.
+Integração Física (IoT): A plataforma atuará como o cérebro da infraestrutura física do condomínio através de uma rede de sensores e atuadores comunicando-se via protocolo MQTT. Isso garantirá o controle automatizado de acessos físicos vinculados ao sistema de reservas e o monitoramento telemétrico ininterrupto de recursos hídricos e elétricos, acionando fluxos de manutenção de forma autônoma.
 
 ## Status
 
-Documento inicial. O escopo, usuários e funcionalidades serão definidos nas próximas etapas.
+Escopo, usuários (morador, administrador, funcionário) e funcionalidades definidos. Detalhamento completo em Requisitos Funcionais (RF01–RF19) e Requisitos Não-Funcionais (RNF01–RNF09).
