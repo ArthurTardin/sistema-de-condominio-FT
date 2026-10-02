@@ -19,7 +19,7 @@ A inativação de usuários, unidades ou espaços não deve excluir registros f�
 Os chamados não são apenas "gerenciados". O sistema deve aplicar um fluxo estrito de estados: Aberto, Atribuído, Em Andamento, Aguardando Peça/Terceiro, Resolvido e Fechado. A transição de estados deve registrar a data, hora e o usuário responsável (Trilha de Auditoria).
 
 ### RF05 - Motor de Reservas
-O sistema deve permitir reservas de espaços comuns com base em uma grade de horários parametrizável por espaço. O sistema deve validar regras de antecedência mínima, limite de horas e inadimplência do morador (bloqueando a reserva caso RF16 conste como pendente).
+O sistema deve permitir reservas de espaços comuns com base em uma grade de horários parametrizável por espaço. O sistema deve validar regras de antecedência mínima, limite de horas e inadimplência do morador (bloqueando a reserva caso RF10 conste como pendente).
 
 ### RF06 - Cancelamento Automatizado
 Reservas podem ser canceladas pelos moradores de acordo com o SLA definido no cadastro do espaço.
@@ -40,20 +40,35 @@ Se os dados de telemetria ultrapassarem limites críticos parametrizados pelo ad
 
 ### Ocorrências e Chamados
 
-### RF10 - Registro de ocorrências
+### RF08 - Registro de ocorrências
 O sistema deve permitir que moradores registrem ocorrências relacionadas ao condomínio. O sistema deve permitir também que o administrador registre ocorrências recebidas por outros canais (telefone, presencial).
 
-### RF11 - Abertura de chamados
-O sistema deve permitir que moradores abram chamados para solicitar atendimento ou manutenção.
+### Financeiro
 
-### RF12 - Atribuição de chamado
-O sistema deve permitir que o administrador atribua o chamado a um funcionário.
+### RF09 - Gerenciamento de taxa condominial
+O sistema deve permitir que o administrador cadastre o valor da taxa condominial por unidade/apartamento
 
-### RF13 - Gerenciamento do chamado
-O sistema deve permitir que o funcionário gerencie o chamado e sua solução.
+### RF10 - Consulta de status de pagamento
+O sistema deve permitir que o morador visualize o status de pagamento (pago/pendente) da taxa condominial de sua unidade.
 
-### RF14 - Histórico de chamados
-O sistema deve manter o histórico de alterações do chamado. O morador deve poder visualizar o histórico dos próprios chamados. O administrador e funcionários devem poder visualizar o histórico de todos os chamados.
+### Estrutura Física
+
+### RF11 - Gerenciamento de unidades
+O sistema deve permitir o cadastro e gerenciamento das unidades do condomínio.
+
+### RF12 - Gerenciamento de apartamentos
+O sistema deve permitir o cadastro e gerenciamento de apartamentos nas unidades dos condomínio.
+
+### RF13 - Gerenciamento de espaços
+O sistema deve permitir o cadastro e gerenciamento dos espaços comuns disponíveis no condomínio.
+
+### Calendário e Notificações
+
+### RF14 - Calendário
+O sistema deve disponibilizar um calendário do condomínio com reservas, eventos e avisos, por dia, semana e mês.
+
+### RF15 - Notificações
+O sistema deve notificar o morador e funcionário sobre reservas, alteração nos chamados e avisos.
 
 ## Requisitos Não-Funcionais
 

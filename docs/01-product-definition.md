@@ -11,4 +11,4 @@ Integração Física (IoT): A plataforma atuará como o cérebro da infraestrutu
 
 ## Status
 
-Escopo, usuários (morador, administrador, funcionário) e funcionalidades definidos. Detalhamento completo em Requisitos Funcionais (RF01–RF19) e Requisitos Não-Funcionais (RNF01–RNF09).
+Escopo do produto e viabilidade arquitetônica definidos. Sistema de requisitos refatorado para suportar arquitetura distribuída, integração física via MQTT e modelo de dados Multi-Tenant.
