@@ -18,12 +18,12 @@ O preenchimento de `DeletedAt` na entidade `Tenant` representa exclusivamente o 
 
 O encerramento de um tenant deve:
 
-- bloquear o acesso de todos os usuários vinculados;
-- impedir novas operações no tenant;
-- impedir novas reservas;
-- impedir a abertura ou processamento de novos chamados;
-- impedir novas operações de controle de acesso;
-- suspender o processamento operacional de telemetria associada ao tenant.
+* bloquear o acesso de todos os usuários vinculados;
+* impedir novas operações no tenant;
+* impedir novas reservas;
+* impedir a abertura ou processamento de novos chamados;
+* impedir novas operações de controle de acesso;
+* suspender o processamento operacional de telemetria associada ao tenant.
 
 É estritamente vedada a exclusão física ou em cascata dos registros operacionais, financeiros (`CobrancaCondominial`), históricos e de auditoria associados ao tenant.
 
@@ -35,10 +35,10 @@ O sistema deve autenticar usuários por meio de credenciais seguras e emitir tok
 
 O sistema deve aplicar controle de acesso baseado em papéis (RBAC), contemplando:
 
-- `Morador`;
-- `Funcionario`;
-- `Administrador`;
-- `Master`.
+* `Morador`;
+* `Funcionario`;
+* `Administrador`;
+* `Master`.
 
 O perfil `Master` representa um usuário de nível superior à administração de um tenant específico e pode possuir `TenantID` nulo.
 
@@ -50,12 +50,12 @@ A inativação de entidades cadastrais e operacionais que suportem desativação
 
 Essa política aplica-se, entre outras entidades, a:
 
-- usuários;
-- unidades;
-- espaços comuns;
-- dispositivos IoT;
-- credenciais;
-- reservas e demais entidades operacionais que possuam histórico associado.
+* usuários;
+* unidades;
+* espaços comuns;
+* dispositivos IoT;
+* credenciais;
+* demais entidades operacionais que possuam histórico associado.
 
 Registros históricos e de auditoria, como `HistoricoChamado`, `RegistroAcesso` e `RegistroTelemetria`, não devem utilizar Soft Delete como mecanismo de remoção.
 
@@ -69,8 +69,8 @@ Esses registros devem ser tratados conforme suas respectivas políticas de reten
 
 Os chamados devem seguir uma máquina de estados definida pelo domínio e devem possuir um tipo compatível com os fluxos de:
 
-- `Manutencao`;
-- `AlarmeIoT`.
+* `Manutencao`;
+* `AlarmeIoT`.
 
 As alterações de estado devem ser registradas em `HistoricoChamado`.
 
@@ -78,11 +78,11 @@ O histórico deve operar estritamente em modo Append-Only, não permitindo alter
 
 Cada alteração deve registrar, no mínimo:
 
-- status anterior;
-- novo status;
-- usuário responsável pela alteração;
-- data e hora da alteração;
-- comentário opcional.
+* status anterior;
+* novo status;
+* usuário responsável pela alteração;
+* data e hora da alteração;
+* comentário opcional.
 
 ### RF05 - Motor de Reservas
 
@@ -90,14 +90,14 @@ O sistema deve permitir reservas de espaços comuns de acordo com as regras para
 
 O motor de reservas deve validar, no mínimo:
 
-- antecedência mínima;
-- antecedência máxima;
-- duração máxima da reserva;
-- período solicitado;
-- disponibilidade do espaço;
-- status operacional do espaço;
-- situação de inadimplência da unidade vinculada ao morador;
-- regras de cancelamento aplicáveis.
+* antecedência mínima;
+* antecedência máxima;
+* duração máxima da reserva;
+* período solicitado;
+* disponibilidade do espaço;
+* status operacional do espaço;
+* situação de inadimplência da unidade vinculada ao morador;
+* regras de cancelamento aplicáveis.
 
 Reservas não podem possuir intervalos de tempo sobrepostos para o mesmo espaço quando ambas estiverem em estado válido para ocupação.
 
@@ -105,15 +105,15 @@ A regra de não sobreposição deve ser garantida de forma transacional e, quand
 
 O modelo deve separar o usuário que solicitou a reserva (`UsuarioID`) do usuário responsável pelo cancelamento (`UsuarioCancelamentoID`).
 
-### RF06 - Cancelamento Automatizado
+### RF06 - Cancelamento de Reservas
 
 Reservas podem ser canceladas pelos moradores de acordo com o período mínimo de antecedência configurado para o espaço.
 
 O sistema deve registrar:
 
-- data e hora do cancelamento;
-- usuário responsável pelo cancelamento;
-- motivo do cancelamento, quando informado.
+* data e hora do cancelamento;
+* usuário responsável pelo cancelamento;
+* motivo do cancelamento, quando informado.
 
 Cancelamentos realizados fora das regras permitidas devem ser rejeitados.
 
@@ -125,11 +125,11 @@ Espaços comuns e ativos de infraestrutura devem possuir controle de estado oper
 
 Os estados devem permitir representar situações como:
 
-- `Disponivel`;
-- `Interditado`;
-- `Manutencao`;
-- `Operacional`;
-- `Inativo`.
+* `Disponivel`;
+* `Interditado`;
+* `Manutencao`;
+* `Operacional`;
+* `Inativo`.
 
 A alteração do estado operacional não deve resultar na exclusão ou alteração indevida do histórico cadastral ou operacional da entidade.
 
@@ -137,14 +137,14 @@ A alteração do estado operacional não deve resultar na exclusão ou alteraç�
 
 O sistema deve disponibilizar ao administrador informações operacionais consolidadas, incluindo:
 
-- taxa de ocupação dos espaços;
-- reservas;
-- chamados por estado;
-- chamados dentro ou fora do SLA;
-- situação de inadimplência;
-- estado operacional da infraestrutura;
-- estado dos dispositivos IoT;
-- indicadores relevantes de telemetria.
+* taxa de ocupação dos espaços;
+* reservas;
+* chamados por estado;
+* chamados dentro ou fora do SLA;
+* situação de inadimplência;
+* estado operacional da infraestrutura;
+* estado dos dispositivos IoT;
+* indicadores relevantes de telemetria.
 
 Quando aplicável, essas informações devem ser atualizadas de forma próxima ao tempo real.
 
@@ -156,15 +156,15 @@ Quando aplicável, essas informações devem ser atualizadas de forma próxima a
 
 Ao confirmar uma reserva que exija controle de acesso físico, o sistema deve gerar ou associar uma autorização de acesso vinculando:
 
-- reserva;
-- credencial;
-- dispositivo físico;
-- período de validade.
+* reserva;
+* credencial;
+* dispositivo físico;
+* período de validade.
 
 O modelo deve desacoplar:
 
-- o estado lógico da autorização (`Ativa`, `Expirada`, `Revogada`);
-- o estado de entrega/sincronização com a infraestrutura (`Pendente`, `Sincronizado`, `Falhou`).
+* o estado lógico da autorização (`Ativa`, `Expirada`, `Revogada`);
+* o estado de entrega/sincronização com a infraestrutura (`Pendente`, `Sincronizado`, `Falhou`).
 
 Em caso de sincronização, o sistema deve registrar a data da última sincronização.
 
@@ -180,9 +180,9 @@ Os registros de telemetria devem ser armazenados em modo Append-Only e não deve
 
 Cada dispositivo deve possuir informações suficientes para interpretar sua telemetria, incluindo:
 
-- tipo do dispositivo;
-- tipo de leitura;
-- unidade de medida correspondente.
+* tipo do dispositivo;
+* tipo de leitura;
+* unidade de medida correspondente.
 
 Os dados de telemetria devem possuir política própria de retenção, conforme definido no RNF10.
 
@@ -211,15 +211,15 @@ Uma ocorrência pode, opcionalmente, dar origem a um único chamado técnico cor
 
 O relacionamento entre ocorrência e chamado deve preservar a distinção entre:
 
-- ocorrência administrativa/disciplinar;
-- chamado técnico de manutenção ou infraestrutura.
+* ocorrência administrativa/disciplinar;
+* chamado técnico de manutenção ou infraestrutura.
 
 ### RF11 - Abertura de Chamados
 
 O sistema deve permitir a abertura de chamados exclusivamente para:
 
-- manutenção física;
-- alarmes provenientes da infraestrutura IoT.
+* manutenção física;
+* alarmes provenientes da infraestrutura IoT.
 
 Os chamados devem possuir título, descrição, tipo, estado atual e usuário responsável pela abertura.
 
@@ -239,11 +239,11 @@ O funcionário responsável deve poder gerenciar o chamado de acordo com as perm
 
 O gerenciamento deve permitir, conforme o estado atual:
 
-- atualização do andamento;
-- registro de comentários;
-- alteração de estado;
-- registro da solução;
-- encerramento do atendimento.
+* atualização do andamento;
+* registro de comentários;
+* alteração de estado;
+* registro da solução;
+* encerramento do atendimento.
 
 Todas as alterações relevantes devem ser registradas no histórico do chamado.
 
@@ -311,8 +311,8 @@ As senhas dos usuários não devem ser armazenadas em texto puro.
 
 O sistema deve utilizar algoritmos modernos de password hashing com salt, como:
 
-- Argon2id;
-- bcrypt.
+* Argon2id;
+* bcrypt.
 
 Os parâmetros de custo do algoritmo devem ser configuráveis de acordo com as recomendações de segurança vigentes.
 
@@ -334,11 +334,11 @@ Em caso de indisponibilidade da conexão com a plataforma, o dispositivo deve co
 
 A política de cache deve possuir regras explícitas para:
 
-- expiração;
-- sincronização;
-- revogação;
-- atualização;
-- comportamento durante indisponibilidade da rede.
+* expiração;
+* sincronização;
+* revogação;
+* atualização;
+* comportamento durante indisponibilidade da rede.
 
 ### RNF08 - Criptografia em Trânsito
 
@@ -364,10 +364,10 @@ As políticas de retenção devem ser definidas por categoria de dado.
 
 Quando aplicável, o sistema deve utilizar:
 
-- retenção temporal;
-- anonimização;
-- agregação estatística;
-- purga controlada.
+* retenção temporal;
+* anonimização;
+* agregação estatística;
+* purga controlada.
 
 A aplicação dessas políticas não deve comprometer registros que possuam obrigação de preservação legal, fiscal, contratual ou de auditoria.
 
@@ -427,13 +427,13 @@ O endereço físico (`MacAddress`) do dispositivo IoT deve possuir unicidade glo
 
 Além das constraints de unicidade, o banco e a aplicação devem garantir as seguintes invariantes:
 
-- `Reserva.DataHoraFim` deve ser posterior a `Reserva.DataHoraInicio`;
-- `AutorizacaoAcesso.ValidoAte` deve ser posterior a `AutorizacaoAcesso.ValidoDe`;
-- `CobrancaCondominial.Valor` não pode ser negativo;
-- `CobrancaCondominial.DataPagamento` deve ser nula enquanto a cobrança não estiver paga;
-- `Usuario.TenantID` deve ser nulo somente para usuários com papel `Master`;
-- usuários que não sejam `Master` devem possuir `TenantID`;
-- entidades relacionadas operacionalmente devem pertencer ao mesmo tenant;
-- uma reserva válida não pode sobrepor outra reserva válida para o mesmo espaço;
-- registros de `HistoricoChamado`, `RegistroAcesso` e `RegistroTelemetria` devem ser tratados como históricos imutáveis;
-- exclusões em cascata não devem remover dados históricos, financeiros ou de auditoria.
+* `Reserva.DataHoraFim` deve ser posterior a `Reserva.DataHoraInicio`;
+* `AutorizacaoAcesso.ValidoAte` deve ser posterior a `AutorizacaoAcesso.ValidoDe`;
+* `CobrancaCondominial.Valor` não pode ser negativo;
+* `CobrancaCondominial.DataPagamento` deve ser nula enquanto a cobrança não estiver paga;
+* `Usuario.TenantID` deve ser nulo somente para usuários com papel `Master`;
+* usuários que não sejam `Master` devem possuir `TenantID`;
+* entidades relacionadas operacionalmente devem pertencer ao mesmo tenant;
+* uma reserva válida não pode sobrepor outra reserva válida para o mesmo espaço;
+* registros de `HistoricoChamado`, `RegistroAcesso` e `RegistroTelemetria` devem ser tratados como históricos imutáveis;
+* exclusões em cascata não devem remover dados históricos, financeiros ou de auditoria.
