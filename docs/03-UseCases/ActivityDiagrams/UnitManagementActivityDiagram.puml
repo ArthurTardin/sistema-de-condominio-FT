@@ -1,0 +1,86 @@
+@startuml UnitManagementActivityDiagram
+
+title Gerenciamento de Unidades Condominiais
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Administrador|
+start
+:Solicitar criação, consulta ou alteração de unidade;
+
+|Backend|
+:Autenticar solicitante;
+:Validar papel e permissões;
+:Determinar TenantID pelo contexto autenticado;
+
+if (Solicitante autorizado?) then (Sim)
+    :Validar operação solicitada;
+else (Não)
+    :Rejeitar solicitação;
+    stop
+endif
+
+if (Operação é criação?) then (Sim)
+    :Validar identificação e dados da unidade;
+    :Verificar duplicidade no condomínio;
+
+    if (Dados válidos e unidade não duplicada?) then (Sim)
+        :Criar unidade associada ao TenantID;
+        :Persistir unidade;
+    else (Não)
+        :Retornar erros de validação;
+        stop
+    endif
+
+else (Não)
+    :Localizar unidade no condomínio autorizado;
+
+    if (Unidade encontrada?) then (Sim)
+        if (Operação é consulta?) then (Sim)
+            :Aplicar filtros de autorização;
+            :Retornar dados permitidos;
+            stop
+        else (Não)
+            :Validar alterações solicitadas;
+
+            if (Alterações permitidas?) then (Sim)
+                :Atualizar dados autorizados;
+                :Persistir alterações;
+            else (Não)
+                :Rejeitar alterações;
+                stop
+            endif
+        endif
+    else (Não)
+        :Retornar unidade não encontrada;
+        stop
+    endif
+endif
+
+if (Persistência concluída?) then (Sim)
+    :Registrar auditoria;
+    :Retornar resultado;
+else (Não)
+    :Reverter transação quando aplicável;
+    :Retornar erro de persistência;
+    stop
+endif
+
+|Administrador|
+:Receber resultado;
+stop
+
+@enduml

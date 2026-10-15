@@ -1,0 +1,59 @@
+@startuml SessionExpirationActivityDiagram
+
+title Expiração e Encerramento de Sessões
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Agendador do Sistema|
+start
+:Iniciar verificação de sessões;
+
+|Backend|
+:Consultar sessões candidatas à expiração;
+:Obter validade e estado de cada sessão;
+
+while (Existem sessões para verificar?) is (Sim)
+    :Selecionar próxima sessão;
+    :Verificar validade, revogação e estado da conta;
+
+    if (Sessão já encerrada?) then (Sim)
+        :Ignorar sessão já processada;
+    else (Não)
+        if (Sessão expirada ou revogada?) then (Sim)
+            :Invalidar sessão no mecanismo aplicável;
+            :Registrar encerramento e motivo;
+
+            if (Sessão foi invalidada com sucesso?) then (Sim)
+                :Marcar sessão como encerrada;
+                :Impedir novas requisições com essa sessão;
+            else (Não)
+                :Registrar falha de invalidação;
+                :Acionar mecanismo de recuperação definido;
+            endif
+
+        else (Não)
+            :Manter sessão válida;
+        endif
+    endif
+
+endwhile (Não)
+
+:Registrar métricas do processamento;
+:Finalizar verificação;
+
+stop
+
+@enduml

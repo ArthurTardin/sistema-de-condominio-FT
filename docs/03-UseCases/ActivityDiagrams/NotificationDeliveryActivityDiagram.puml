@@ -1,0 +1,72 @@
+@startuml NotificationDeliveryActivityDiagram
+
+title Processamento e Entrega de Notificações
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Sistema de origem|
+start
+:Produzir evento que pode gerar notificação;
+
+|Backend|
+:Validar evento e contexto do condomínio;
+:Identificar tipo e finalidade da notificação;
+
+if (Evento válido e notificável?) then (Sim)
+    :Determinar destinatários autorizados;
+    :Aplicar preferências e regras de notificação;
+else (Não)
+    :Descartar ou registrar evento inválido;
+    stop
+endif
+
+if (Existem destinatários elegíveis?) then (Sim)
+    :Preparar conteúdo da notificação;
+    :Remover dados não necessários;
+    :Registrar notificação conforme arquitetura;
+else (Não)
+    :Registrar ausência de destinatários quando necessário;
+    stop
+endif
+
+:Selecionar canal de entrega configurado;
+
+if (Canal disponível?) then (Sim)
+    :Enviar notificação;
+
+    if (Provedor confirmou recebimento?) then (Sim)
+        :Registrar resultado da entrega;
+    else (Não)
+        :Registrar falha de entrega;
+        :Avaliar política de retentativa;
+
+        if (Retentativa permitida?) then (Sim)
+            :Agendar nova tentativa;
+        else (Não)
+            :Marcar entrega como falha definitiva;
+            :Disponibilizar falha para monitoramento;
+        endif
+    endif
+
+else (Não)
+    :Registrar indisponibilidade do canal;
+    :Agendar retentativa se prevista;
+endif
+
+:Registrar métricas e auditoria aplicáveis;
+stop
+
+@enduml

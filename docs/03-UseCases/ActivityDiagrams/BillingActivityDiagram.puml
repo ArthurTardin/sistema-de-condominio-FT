@@ -1,0 +1,83 @@
+@startuml BillingActivityDiagram
+
+title Consulta e Gerenciamento de Cobranças Condominiais
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Usuário|
+start
+:Solicitar consulta ou gerenciamento de cobranças;
+
+|Backend|
+:Autenticar solicitante;
+:Validar permissões;
+:Determinar contexto do condomínio;
+
+if (Solicitante autorizado?) then (Sim)
+    :Validar parâmetros da operação;
+else (Não)
+    :Rejeitar solicitação;
+    stop
+endif
+
+if (Operação é consulta?) then (Sim)
+    :Identificar escopo permitido de consulta;
+
+    if (Solicitante é morador?) then (Sim)
+        :Restringir consulta às cobranças autorizadas;
+    else (Não)
+        :Aplicar permissões administrativas;
+    endif
+
+    :Consultar cobranças e respectivos estados;
+    :Retornar dados financeiros permitidos;
+    stop
+
+else (Não)
+    :Validar permissão para alterar informações financeiras;
+    :Localizar cobrança no contexto autorizado;
+
+    if (Cobrança encontrada?) then (Sim)
+        :Validar operação e estado atual da cobrança;
+
+        if (Alteração permitida pelas regras de negócio?) then (Sim)
+            :Aplicar alteração autorizada;
+            :Persistir alteração;
+        else (Não)
+            :Rejeitar operação;
+            stop
+        endif
+
+    else (Não)
+        :Retornar cobrança não encontrada;
+        stop
+    endif
+endif
+
+if (Persistência concluída?) then (Sim)
+    :Registrar auditoria da alteração;
+    :Retornar resultado;
+else (Não)
+    :Reverter transação quando aplicável;
+    :Retornar erro de persistência;
+    stop
+endif
+
+|Usuário|
+:Receber resultado;
+stop
+
+@enduml

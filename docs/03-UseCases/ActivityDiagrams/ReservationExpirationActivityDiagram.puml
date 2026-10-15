@@ -1,0 +1,71 @@
+@startuml ReservationExpirationActivityDiagram
+
+title Expiração Automática de Reservas
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Agendador do Sistema|
+start
+:Iniciar ciclo de expiração;
+
+|Backend|
+:Consultar reservas candidatas à expiração;
+:Filtrar reservas pelo prazo e estado configurados;
+
+while (Existem reservas para processar?) is (Sim)
+    :Selecionar próxima reserva;
+    :Verificar estado atual e horário de expiração;
+
+    if (Reserva ainda pode expirar?) then (Sim)
+        :Iniciar transação;
+        :Revalidar estado e prazo no banco;
+
+        if (Reserva continua elegível?) then (Sim)
+            :Atualizar estado para Expirada;
+            :Persistir alteração e auditoria;
+            :Confirmar transação;
+
+            if (Reserva possui autorização de acesso vinculada?) then (Sim)
+                :Solicitar revogação da autorização;
+                :Registrar estado de sincronização;
+
+                if (Revogação sincronizada?) then (Sim)
+                    :Registrar sincronização concluída;
+                else (Não)
+                    :Manter sincronização pendente ou com falha;
+                    :Agendar retentativa conforme política;
+                endif
+            else (Não)
+                :Continuar sem revogação de autorização;
+            endif
+
+            :Notificar interessados conforme regras;
+        else (Não)
+            :Cancelar processamento da reserva;
+            :Reverter transação;
+        endif
+
+    else (Não)
+        :Ignorar reserva já processada ou não elegível;
+    endif
+endwhile (Não)
+
+:Registrar métricas do processamento;
+:Finalizar ciclo;
+
+stop
+
+@enduml

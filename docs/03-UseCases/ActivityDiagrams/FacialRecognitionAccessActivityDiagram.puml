@@ -1,0 +1,95 @@
+@startuml FacialRecognitionAccessActivityDiagram
+
+title Facial Recognition Access Activity Diagram
+
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam activityBackgroundColor #1e293b
+skinparam activityBorderColor #64748b
+skinparam activityFontColor #f8fafc
+skinparam activityDiamondBackgroundColor #334155
+skinparam activityDiamondBorderColor #94a3b8
+skinparam activityDiamondFontColor #f8fafc
+skinparam ArrowColor #94a3b8
+
+start
+
+:Capturar imagem no dispositivo de acesso;
+:Validar funcionamento do dispositivo;
+
+if (Dispositivo operacional?) then (Sim)
+
+    :Verificar conexão com serviço de IA;
+
+    if (Serviço disponível?) then (Sim)
+
+        :Transmitir imagem de forma protegida;
+        :Solicitar análise facial ao serviço de IA;
+        :Receber resultado da análise;
+
+        if (Resultado válido?) then (Sim)
+
+            :Verificar correspondência facial;
+
+            if (Correspondência suficiente?) then (Sim)
+
+                :Identificar usuário candidato;
+                :Validar identidade no backend;
+                :Validar vínculo com o Tenant;
+                :Consultar estado da conta e credencial;
+                :Consultar autorização de acesso;
+
+                if (Identidade e autorização válidas?) then (Sim)
+
+                    :Validar período de validade;
+                    :Aplicar regras de acesso;
+
+                    if (Acesso permitido?) then (Sim)
+
+                        :Enviar comando ao dispositivo;
+                        :Confirmar resultado da execução física;
+
+                        if (Acesso executado?) then (Sim)
+                            :Registrar acesso concedido;
+                        else (Não)
+                            :Registrar falha de execução;
+                            :Notificar serviço responsável;
+                        endif
+
+                    else (Não)
+                        :Registrar acesso negado;
+                    endif
+
+                else (Não)
+                    :Registrar acesso negado;
+                endif
+
+            else (Não)
+                :Registrar falha de correspondência;
+                :Solicitar método alternativo autorizado;
+            endif
+
+        else (Não)
+            :Registrar falha de análise;
+            :Solicitar método alternativo autorizado;
+        endif
+
+    else (Não)
+        :Registrar indisponibilidade do serviço;
+        :Aplicar política de contingência autorizada;
+    endif
+
+else (Não)
+
+    :Registrar falha do dispositivo;
+    :Aplicar procedimento de contingência autorizado;
+
+endif
+
+:Registrar evento de auditoria;
+:Aplicar política de retenção dos dados;
+:Finalizar tentativa de acesso;
+
+stop
+
+@enduml

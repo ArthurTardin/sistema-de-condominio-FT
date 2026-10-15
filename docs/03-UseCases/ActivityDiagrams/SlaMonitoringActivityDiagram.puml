@@ -1,0 +1,73 @@
+@startuml SlaMonitoringActivityDiagram
+
+title Monitoramento de SLA dos Chamados
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Agendador do Sistema|
+start
+:Iniciar ciclo de monitoramento;
+
+|Backend|
+:Consultar chamados sujeitos a SLA;
+:Obter prazos e estados atuais;
+:Determinar prazos conforme regras de negócio;
+
+while (Existem chamados para avaliar?) is (Sim)
+    :Selecionar próximo chamado;
+    :Verificar estado atual e histórico relevante;
+
+    if (Chamado está em estado elegível?) then (Sim)
+        :Calcular tempo decorrido aplicável;
+        :Comparar com o prazo configurado;
+
+        if (Prazo ultrapassado?) then (Sim)
+            :Registrar ocorrência de SLA excedido;
+
+            if (Alerta já foi registrado para esta condição?) then (Sim)
+                :Evitar duplicação do alerta;
+            else (Não)
+                :Registrar evento de SLA;
+                :Notificar responsáveis conforme regras;
+            endif
+
+        else (Não)
+            if (Prazo próximo do vencimento?) then (Sim)
+                :Verificar se alerta preventivo é aplicável;
+
+                if (Alerta preventivo ainda não enviado?) then (Sim)
+                    :Registrar alerta preventivo;
+                    :Notificar responsáveis;
+                else (Não)
+                    :Evitar notificação duplicada;
+                endif
+            else (Não)
+                :Manter acompanhamento do prazo;
+            endif
+        endif
+
+    else (Não)
+        :Não contabilizar prazo para estado inelegível;
+    endif
+
+endwhile (Não)
+
+:Registrar métricas do monitoramento;
+:Finalizar ciclo;
+
+stop
+
+@enduml

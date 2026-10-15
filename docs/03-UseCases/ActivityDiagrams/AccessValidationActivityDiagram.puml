@@ -1,0 +1,94 @@
+@startuml AccessValidationActivityDiagram
+
+title Validação de Acesso Físico
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Dispositivo de Acesso|
+start
+:Capturar credencial apresentada;
+:Validar formato da leitura;
+
+if (Leitura válida?) then (Sim)
+    :Enviar solicitação de validação;
+else (Não)
+    :Negar tentativa de acesso;
+    :Registrar evento local, se suportado;
+    stop
+endif
+
+|Backend ou Validador Local|
+:Validar identidade e integridade da solicitação;
+:Identificar dispositivo e contexto do condomínio;
+
+if (Dispositivo confiável e autorizado?) then (Sim)
+    :Localizar credencial correspondente;
+else (Não)
+    :Negar acesso;
+    :Registrar tentativa inválida;
+    stop
+endif
+
+if (Credencial ativa e válida?) then (Sim)
+    :Consultar autorização aplicável;
+else (Não)
+    :Negar acesso;
+    :Registrar motivo da decisão;
+    stop
+endif
+
+if (Autorização válida para o dispositivo e horário?) then (Sim)
+    :Verificar estado lógico da autorização;
+else (Não)
+    :Negar acesso;
+    :Registrar tentativa sem autorização válida;
+    stop
+endif
+
+if (Autorização ativa e não revogada?) then (Sim)
+    :Aplicar regras de acesso configuradas;
+else (Não)
+    :Negar acesso;
+    :Registrar motivo da decisão;
+    stop
+endif
+
+if (Validação concluída com sucesso?) then (Sim)
+    :Emitir comando de liberação;
+    :Registrar resultado da tentativa;
+else (Não)
+    :Negar acesso;
+    :Registrar falha de validação;
+    stop
+endif
+
+|Dispositivo de Acesso|
+:Executar decisão recebida;
+
+if (Acesso liberado pelo dispositivo?) then (Sim)
+    :Confirmar resultado, quando suportado;
+else (Não)
+    :Registrar falha de execução;
+endif
+
+|Backend ou Validador Local|
+:Persistir RegistroAcesso quando possível;
+:Sincronizar eventos locais pendentes;
+:Atualizar métricas e alertas aplicáveis;
+
+stop
+
+@enduml

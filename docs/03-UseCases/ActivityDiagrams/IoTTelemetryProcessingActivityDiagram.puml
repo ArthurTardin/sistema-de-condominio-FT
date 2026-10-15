@@ -1,0 +1,106 @@
+plantuml
+@startuml
+title Diagrama de Atividades - Processamento de Telemetria IoT
+
+skinparam backgroundColor #0f172a
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #64748b
+skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
+
+start
+
+partition "Dispositivo IoT" {
+  :Coletar leitura ou evento;
+  :Montar mensagem de telemetria;
+  :Publicar mensagem via MQTT;
+}
+
+partition "Integração MQTT" {
+  :Receber mensagem;
+  :Identificar tópico e dispositivo;
+  :Validar formato e tamanho da mensagem;
+
+  if (Mensagem válida?) then (Sim)
+  else (Não)
+    :Rejeitar mensagem inválida;
+    :Registrar evento de erro;
+    stop
+  endif
+
+  :Validar identidade e autorização\ndo dispositivo;
+  
+  if (Dispositivo autorizado?) then (Sim)
+  else (Não)
+    :Rejeitar mensagem não autorizada;
+    :Registrar evento de segurança;
+    stop
+  endif
+
+  :Validar TenantID e vínculo\ndo dispositivo com o condomínio;
+
+  if (Contexto válido?) then (Sim)
+  else (Não)
+    :Rejeitar mensagem;
+    :Registrar falha de isolamento;
+    stop
+  endif
+}
+
+partition "Processamento de Telemetria" {
+  :Validar campos, unidade e timestamp;
+  :Verificar duplicidade da mensagem;
+
+  if (Mensagem já processada?) then (Sim)
+    :Ignorar processamento duplicado;
+    stop
+  else (Não)
+    :Persistir registro de telemetria;
+  endif
+
+  :Atualizar indicadores aplicáveis;
+  :Avaliar limites e condições configuradas;
+
+  if (Limite ou condição violada?) then (Sim)
+    :Identificar tipo e severidade do evento;
+    :Aplicar regras de deduplicação\ne correlação;
+
+    if (Alarme novo ou recorrente?) then (Novo)
+      :Registrar alarme;
+    else (Já tratado)
+      :Atualizar ou correlacionar\ncom alarme existente;
+    endif
+
+    if (Regra exige chamado?) then (Sim)
+      :Solicitar criação de chamado IoT;
+    else (Não)
+      :Manter alarme sem chamado;
+    endif
+  else (Não)
+    :Concluir processamento normal;
+  endif
+}
+
+partition "Gestão Operacional" {
+  if (Criação de chamado solicitada?) then (Sim)
+    :Validar condições de criação;
+    :Criar chamado do tipo AlarmeIoT;
+    :Registrar histórico inicial;
+  else (Não)
+    :Não criar chamado;
+  endif
+
+  :Emitir notificações aplicáveis;
+  :Registrar eventos de auditoria;
+}
+
+stop
+
+@enduml

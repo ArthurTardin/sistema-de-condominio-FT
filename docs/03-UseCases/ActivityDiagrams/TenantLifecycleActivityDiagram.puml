@@ -1,0 +1,105 @@
+@startuml TenantLifecycleActivityDiagram
+
+title Tenant Lifecycle Activity Diagram
+
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam activityBackgroundColor #1e293b
+skinparam activityBorderColor #64748b
+skinparam activityFontColor #f8fafc
+skinparam activityDiamondBackgroundColor #334155
+skinparam activityDiamondBorderColor #94a3b8
+skinparam activityDiamondFontColor #f8fafc
+skinparam ArrowColor #94a3b8
+
+start
+
+:Solicitar cadastro do condomínio;
+:Validar dados e informações contratuais;
+
+if (Dados válidos?) then (Sim)
+
+    :Verificar duplicidade de cadastro;
+
+    if (Cadastro já existe?) then (Sim)
+        :Informar conflito de cadastro;
+        stop
+    else (Não)
+        :Criar Tenant;
+        :Registrar dados iniciais;
+        :Manter Tenant inativo até ativação autorizada;
+    endif
+
+else (Não)
+    :Rejeitar cadastro;
+    :Registrar motivo da rejeição;
+    stop
+endif
+
+:Validar autorização para ativação;
+
+if (Ativação autorizada?) then (Sim)
+
+    :Ativar Tenant;
+    :Registrar ativação e responsável;
+    :Habilitar operações permitidas;
+
+else (Não)
+
+    :Manter Tenant inativo;
+    :Registrar resultado da operação;
+    stop
+
+endif
+
+:Operar plataforma normalmente;
+
+if (Solicitação de suspensão?) then (Sim)
+
+    :Validar autorização para suspensão;
+
+    if (Suspensão autorizada?) then (Sim)
+        :Suspender operações conforme política;
+        :Bloquear novas operações não permitidas;
+        :Registrar suspensão;
+    else (Não)
+        :Registrar suspensão não autorizada;
+    endif
+
+else (Não)
+    :Continuar operação;
+endif
+
+if (Solicitação de encerramento contratual?) then (Sim)
+
+    :Validar autorização para encerramento;
+
+    if (Encerramento autorizado?) then (Sim)
+
+        :Registrar DeletedAt do Tenant;
+        :Bloquear novas reservas, chamados,
+        acessos e operações aplicáveis;
+        :Revogar ou invalidar sessões e credenciais
+        conforme política;
+        :Preservar dados históricos,
+        financeiros e registros de auditoria;
+        :Registrar encerramento contratual;
+
+    else (Não)
+
+        :Rejeitar encerramento;
+        :Registrar motivo da rejeição;
+
+    endif
+
+else (Não)
+
+    :Manter Tenant no estado atual;
+
+endif
+
+:Registrar resultado final da operação;
+
+stop
+
+@enduml

@@ -1,0 +1,94 @@
+@startuml UserAuthenticationActivityDiagram
+
+title Autenticação de Usuário e Criação de Sessão
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Usuário|
+start
+:Informa credenciais;
+:Envia solicitação de autenticação;
+
+|Backend|
+:Validar formato dos dados recebidos;
+
+if (Dados em formato válido?) then (Sim)
+    :Localizar conta pelo identificador;
+else (Não)
+    :Rejeitar solicitação;
+    :Retornar erro de validação;
+    stop
+endif
+
+if (Conta encontrada e ativa?) then (Sim)
+    :Verificar senha com hash armazenado;
+else (Não)
+    :Registrar tentativa conforme política de auditoria;
+    :Retornar erro genérico de autenticação;
+    stop
+endif
+
+if (Senha válida?) then (Sim)
+    :Consultar papel e contexto de acesso;
+else (Não)
+    :Registrar falha de autenticação;
+    :Retornar erro genérico de autenticação;
+    stop
+endif
+
+if (Papel é Master?) then (Sim)
+    :Validar permissões de plataforma;
+    :Definir contexto de plataforma;
+else (Não)
+    :Validar vínculo com condomínio;
+    :Verificar se o condomínio está ativo;
+
+    if (Vínculo e condomínio válidos?) then (Sim)
+        :Definir TenantID a partir do contexto validado;
+    else (Não)
+        :Rejeitar autenticação;
+        :Registrar evento de segurança;
+        stop
+    endif
+endif
+
+:Construir identidade autenticada;
+:Associar papel e permissões aplicáveis;
+:Gerar token de autenticação conforme arquitetura;
+
+if (Sessão precisa ser persistida ou rastreada?) then (Sim)
+    :Registrar sessão e validade;
+    :Registrar metadados necessários;
+else (Não)
+    :Aplicar mecanismo de sessão definido na arquitetura;
+endif
+
+if (Criação da sessão concluída?) then (Sim)
+    :Registrar evento de autenticação bem-sucedida;
+    :Retornar token e dados necessários ao cliente;
+else (Não)
+    :Invalidar credenciais temporárias emitidas;
+    :Registrar falha na criação da sessão;
+    :Retornar erro de autenticação;
+    stop
+endif
+
+|Usuário|
+:Receber resposta da autenticação;
+:Armazenar credenciais de sessão conforme política de segurança;
+stop
+
+@enduml

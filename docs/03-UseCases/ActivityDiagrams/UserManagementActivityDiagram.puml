@@ -1,0 +1,90 @@
+@startuml UserManagementActivityDiagram
+
+title Gerenciamento de Usuários
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Ator autorizado|
+start
+:Solicitar criação, consulta ou alteração de usuário;
+
+|Backend|
+:Autenticar solicitante;
+:Validar permissões para a operação;
+:Determinar contexto de acesso e TenantID;
+
+if (Solicitante autorizado?) then (Sim)
+    :Validar dados da operação;
+else (Não)
+    :Rejeitar solicitação;
+    :Registrar evento de segurança quando aplicável;
+    stop
+endif
+
+if (Operação é criação?) then (Sim)
+    :Validar campos obrigatórios;
+    :Validar unicidade dos identificadores;
+    :Validar papel e permissões atribuíveis;
+    :Validar vínculo com o condomínio;
+
+    if (Dados e vínculos válidos?) then (Sim)
+        :Criar usuário no contexto autorizado;
+        :Persistir registro;
+    else (Não)
+        :Retornar erros de validação;
+        stop
+    endif
+
+else (Não)
+    :Localizar usuário no contexto autorizado;
+
+    if (Usuário encontrado e acessível?) then (Sim)
+        if (Operação é consulta?) then (Sim)
+            :Aplicar filtros de autorização;
+            :Retornar dados permitidos;
+            stop
+        else (Não)
+            :Validar alterações solicitadas;
+
+            if (Alterações permitidas?) then (Sim)
+                :Atualizar campos autorizados;
+                :Preservar histórico necessário;
+                :Persistir alterações;
+            else (Não)
+                :Rejeitar alterações;
+                stop
+            endif
+        endif
+    else (Não)
+        :Retornar resposta de recurso indisponível ou não encontrado;
+        stop
+    endif
+endif
+
+if (Persistência concluída?) then (Sim)
+    :Registrar auditoria da operação;
+    :Retornar resultado ao solicitante;
+else (Não)
+    :Reverter transação quando aplicável;
+    :Retornar erro de persistência;
+    stop
+endif
+
+|Ator autorizado|
+:Receber resultado da operação;
+stop
+
+@enduml

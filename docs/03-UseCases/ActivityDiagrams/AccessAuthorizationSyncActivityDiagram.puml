@@ -1,0 +1,100 @@
+plantuml
+@startuml
+title Diagrama de Atividades - Sincronização de Autorizações de Acesso
+
+skinparam backgroundColor #0f172a
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #64748b
+skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
+
+start
+
+partition "Backend" {
+  :Identificar evento de autorização;
+  :Consultar reserva, credencial\ne dispositivo relacionados;
+  :Validar contexto do condomínio;
+
+  if (Contexto e vínculos válidos?) then (Sim)
+  else (Não)
+    :Rejeitar operação;
+    :Registrar motivo e evento de auditoria;
+    stop
+  endif
+
+  :Validar estado e período da reserva;
+  :Validar credencial e regras de acesso;
+
+  if (Autorização permitida?) then (Sim)
+    :Criar ou atualizar autorização lógica;
+    :Definir validade e dispositivo autorizado;
+    :Definir sincronização como Pendente;
+    :Registrar evento para sincronização;
+  else (Não)
+    :Não emitir autorização;
+    :Registrar motivo da rejeição;
+    stop
+  endif
+}
+
+partition "Serviço de Sincronização" {
+  :Selecionar autorização pendente;
+  :Verificar conectividade e identidade do dispositivo;
+
+  if (Dispositivo acessível?) then (Sim)
+    :Enviar autorização por canal autenticado;
+    :Aguardar confirmação do dispositivo;
+
+    if (Confirmação válida recebida?) then (Sim)
+      :Marcar sincronização como Sincronizado;
+      :Registrar data e resultado da sincronização;
+    else (Não)
+      :Registrar falha de sincronização;
+      :Manter operação pendente para tratamento;
+    endif
+
+  else (Não)
+    :Manter sincronização como Pendente;
+    :Registrar indisponibilidade do dispositivo;
+  endif
+}
+
+partition "Dispositivo IoT" {
+  if (Recebeu autorização?) then (Sim)
+    :Validar autenticidade e integridade;
+    :Validar dispositivo e validade da autorização;
+
+    if (Autorização aceita?) then (Sim)
+      :Armazenar autorização conforme política local;
+      :Enviar confirmação de sincronização;
+    else (Não)
+      :Rejeitar autorização;
+      :Enviar resposta de falha, quando possível;
+    endif
+  else (Não)
+    :Aguardar nova tentativa de sincronização;
+  endif
+}
+
+partition "Backend" {
+  if (Autorização expirada ou revogada?) then (Sim)
+    :Atualizar estado lógico da autorização;
+    :Solicitar remoção ou invalidação no dispositivo;
+    :Registrar sincronização da revogação;
+  else (Não)
+    :Manter estado lógico vigente;
+  endif
+
+  :Registrar eventos de auditoria aplicáveis;
+}
+
+stop
+
+@enduml

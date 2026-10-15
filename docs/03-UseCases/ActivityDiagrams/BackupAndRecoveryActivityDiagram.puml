@@ -1,0 +1,97 @@
+@startuml BackupAndRecoveryActivityDiagram
+
+title Backup and Recovery Activity Diagram
+
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam activityBackgroundColor #1e293b
+skinparam activityBorderColor #64748b
+skinparam activityFontColor #f8fafc
+skinparam activityDiamondBackgroundColor #334155
+skinparam activityDiamondBorderColor #94a3b8
+skinparam activityDiamondFontColor #f8fafc
+skinparam ArrowColor #94a3b8
+
+start
+
+:Iniciar processo de backup;
+:Validar configuração e permissões;
+
+if (Configuração válida?) then (Sim)
+
+    :Identificar escopo do backup;
+    :Verificar disponibilidade do destino;
+
+    if (Destino disponível?) then (Sim)
+
+        :Iniciar geração do backup;
+        :Exportar dados e estruturas;
+        :Armazenar backup no destino;
+        :Validar integridade do backup;
+
+        if (Backup íntegro?) then (Sim)
+            :Registrar backup concluído;
+            :Registrar metadados e resultado;
+        else (Não)
+            :Registrar falha de integridade;
+            :Gerar alerta operacional;
+        endif
+
+    else (Não)
+        :Registrar indisponibilidade do destino;
+        :Gerar alerta operacional;
+    endif
+
+else (Não)
+    :Registrar erro de configuração
+    ou autorização;
+endif
+
+if (Restauração solicitada?) then (Sim)
+
+    :Validar autorização;
+    :Selecionar backup e ponto de recuperação;
+    :Verificar integridade e compatibilidade;
+
+    if (Backup utilizável?) then (Sim)
+
+        :Definir ambiente de restauração;
+        :Verificar riscos de sobrescrita;
+
+        if (Restauração autorizada?) then (Sim)
+
+            :Preparar ambiente de destino;
+            :Executar restauração;
+            :Validar consistência dos dados;
+
+            if (Validação concluída?) then (Sim)
+                :Registrar restauração concluída;
+                :Executar verificações pós-restauração;
+            else (Não)
+                :Registrar falha de validação;
+                :Bloquear disponibilização
+                do ambiente restaurado;
+                :Acionar recuperação operacional;
+            endif
+
+        else (Não)
+            :Cancelar restauração;
+            :Registrar responsável e motivo;
+        endif
+
+    else (Não)
+        :Rejeitar backup inválido
+        ou incompatível;
+        :Registrar motivo da rejeição;
+        :Gerar alerta operacional;
+    endif
+
+else (Não)
+    :Finalizar fluxo de backup;
+endif
+
+:Registrar resultado final da operação;
+
+stop
+
+@enduml

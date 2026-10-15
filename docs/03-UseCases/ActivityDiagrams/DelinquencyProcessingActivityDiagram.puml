@@ -1,0 +1,69 @@
+@startuml DelinquencyProcessingActivityDiagram
+
+title Processamento de Inadimplência Condominial
+
+skinparam backgroundColor #0f172a
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #64748b
+    FontColor #f8fafc
+    DiamondBackgroundColor #334155
+    DiamondBorderColor #64748b
+    DiamondFontColor #f8fafc
+    StartColor #22c55e
+    EndColor #ef4444
+    BarColor #64748b
+}
+skinparam ArrowColor #94a3b8
+skinparam defaultFontColor #f8fafc
+
+|Agendador do Sistema|
+start
+:Iniciar ciclo de verificação financeira;
+
+|Backend|
+:Consultar cobranças elegíveis para análise;
+:Filtrar registros pelo vencimento e estado financeiro;
+
+while (Existem cobranças para analisar?) is (Sim)
+    :Selecionar próxima cobrança;
+    :Revalidar dados financeiros e contexto do condomínio;
+
+    if (Cobrança já está quitada ou cancelada?) then (Sim)
+        :Ignorar cobrança inelegível;
+    else (Não)
+        if (Cobrança está vencida conforme regra vigente?) then (Sim)
+            :Verificar se a situação já foi processada;
+
+            if (Inadimplência já está registrada?) then (Sim)
+                :Atualizar situação somente se necessário;
+            else (Não)
+                :Registrar situação de inadimplência;
+                :Associar registro à cobrança e unidade;
+            endif
+
+            :Consultar regras de negócio aplicáveis;
+
+            if (Existe ação automática autorizada?) then (Sim)
+                :Validar condições e permissões da ação;
+                :Executar ação permitida;
+                :Registrar resultado e auditoria;
+            else (Não)
+                :Manter registro financeiro atualizado;
+            endif
+
+            :Preparar notificações previstas nas regras;
+        else (Não)
+            :Manter cobrança sem classificação de inadimplência;
+        endif
+    endif
+
+endwhile (Não)
+
+:Persistir alterações necessárias;
+:Registrar métricas do processamento;
+:Finalizar ciclo;
+
+stop
+
+@enduml
