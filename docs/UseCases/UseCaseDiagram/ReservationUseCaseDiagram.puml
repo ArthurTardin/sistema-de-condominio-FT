@@ -1,0 +1,57 @@
+
+@startuml
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Morador" as Morador
+actor "Administrador" as Admin
+
+rectangle "Módulo de Reservas e Espaços Comuns" {
+  usecase "Consultar Disponibilidade" as UC_Disp
+  usecase "Realizar Reserva" as UC_Reserva
+  usecase "Cancelar Reserva" as UC_Canc
+  usecase "Consultar Reservas" as UC_Cons
+  usecase "Gerenciar Espaços Comuns" as UC_GerEsp
+
+  usecase "Validar Regras de Negócio e Capacidade" as UC_ValNeg
+  usecase "Validar Inadimplência Financeira" as UC_ValFin
+  usecase "Verificar Conflitos de Horário" as UC_Conc
+}
+
+Morador --> UC_Disp
+Morador --> UC_Reserva
+Morador --> UC_Canc
+Morador --> UC_Cons
+
+Admin --> UC_Disp
+Admin --> UC_Reserva
+Admin --> UC_Canc
+Admin --> UC_Cons
+Admin --> UC_GerEsp
+
+UC_Reserva ..> UC_ValNeg : <<include>>
+UC_Reserva ..> UC_ValFin : <<include>>
+UC_Reserva ..> UC_Conc : <<include>>
+
+@enduml
