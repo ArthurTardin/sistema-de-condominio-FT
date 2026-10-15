@@ -6,6 +6,7 @@
 - **Nome:** Realizar Reserva
 - **Módulo:** Espaços Comuns e Reservas
 - **Objetivo:** Permitir que um usuário autorizado solicite a reserva de um espaço comum para uma data e um período específicos.
+- **Requisito associado:** RF05
 
 ## 2. Atores
 
