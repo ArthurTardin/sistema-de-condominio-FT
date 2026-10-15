@@ -1,0 +1,154 @@
+@startuml
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Morador" as Morador
+actor "Funcionário" as Funcionario
+actor "Administrador" as Administrador
+actor "Master" as Master
+actor "Dispositivo IoT" as IoT
+
+rectangle "Plataforma de Gestão Condominial e IoT" {
+  
+  package "Autenticação e Sessão" {
+    usecase "Autenticar-se" as UC1
+    usecase "Gerenciar Dados da Conta" as UC2
+    usecase "Recuperar Senha" as UC3
+  }
+
+  package "Espaços Comuns e Reservas" {
+    usecase "Realizar Reservas" as UC4
+    usecase "Cancelar Reservas" as UC5
+    usecase "Consultar Reservas" as UC6
+    usecase "Consultar Disponibilidade" as UC7
+    usecase "Gerenciar Espaços Comuns" as UC8
+  }
+
+  package "Chamados e Ocorrências" {
+    usecase "Registrar Ocorrência" as UC9
+    usecase "Abrir Chamado" as UC10
+    usecase "Gerenciar Chamado" as UC11
+    usecase "Atribuir Chamado" as UC12
+    usecase "Acompanhar SLA" as UC13
+    usecase "Consultar Histórico" as UC14
+  }
+
+  package "Gestão do Condomínio" {
+    usecase "Gerenciar Usuários" as UC15
+    usecase "Gerenciar Unidades" as UC16
+    usecase "Gerenciar Infraestrutura" as UC17
+    usecase "Gerenciar Dispositivos IoT" as UC18
+    usecase "Gerenciar Cobranças" as UC19
+    usecase "Dashboard Administrativo" as UC20
+    usecase "Configurar Condomínio" as UC21
+  }
+
+  package "Controle de Acesso" {
+    usecase "Gerenciar Credenciais" as UC22
+    usecase "Gerenciar Autorizações" as UC23
+    usecase "Consultar Registros de Acesso" as UC24
+  }
+
+  package "Administração SaaS e Suporte" {
+    usecase "Gerenciar Condomínios" as UC25
+    usecase "Gerenciar Usuários Master" as UC26
+    usecase "Dashboard Global" as UC27
+    usecase "Auditoria e Logs" as UC28
+    usecase "Gerenciar Planos e Limites" as UC29
+    usecase "Suporte Emergencial" as UC30
+    usecase "Gerenciar Integrações" as UC31
+  }
+
+  package "Processos e Eventos de Infraestrutura" {
+    usecase "Processar Telemetria MQTT" as UC32
+    usecase "Gerar Alertas e Chamados IoT" as UC33
+    usecase "Processar Expiração de Reservas e Autorizações" as UC34
+    usecase "Monitorar SLA dos Chamados" as UC37
+    usecase "Sincronizar Autorizações com Dispositivos de Borda" as UC35
+    usecase "Disparar Notificações" as UC36
+  }
+}
+
+' Relações Morador
+Morador --> UC1
+Morador --> UC2
+Morador --> UC4
+Morador --> UC5
+Morador --> UC6
+Morador --> UC7
+Morador --> UC9
+Morador --> UC10
+Morador --> UC14
+
+' Relações Funcionário
+Funcionario --> UC1
+Funcionario --> UC11
+Funcionario --> UC13
+Funcionario --> UC14
+
+' Relações Administrador
+Administrador --> UC1
+Administrador --> UC4
+Administrador --> UC5
+Administrador --> UC6
+Administrador --> UC8
+Administrador --> UC9
+Administrador --> UC10
+Administrador --> UC11
+Administrador --> UC12
+Administrador --> UC15
+Administrador --> UC16
+Administrador --> UC17
+Administrador --> UC18
+Administrador --> UC19
+Administrador --> UC20
+Administrador --> UC21
+Administrador --> UC22
+Administrador --> UC23
+Administrador --> UC24
+
+' Relações Master
+Master --> UC1
+Master --> UC25
+Master --> UC26
+Master --> UC27
+Master --> UC28
+Master --> UC29
+Master --> UC30
+Master --> UC31
+
+' Relações IoT (Ator externo legítimo)
+IoT --> UC32
+IoT --> UC35
+
+' Recuperação de senha
+Morador --> UC3
+Funcionario --> UC3
+Administrador --> UC3
+Master --> UC3
+
+' Consulta do histórico
+Administrador --> UC14
+
+@enduml
