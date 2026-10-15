@@ -1,0 +1,101 @@
+plantuml
+@startuml
+title Diagrama de Atividades - Ciclo de Vida do Chamado
+
+skinparam backgroundColor #0f172a
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #64748b
+skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
+
+start
+
+partition "Origem do Chamado" {
+  if (Como o chamado é criado?) then (Manual)
+    :Morador ou Administrador\nsolicita abertura;
+    :Informar dados do chamado;
+  else (Alarme IoT)
+    :Sistema identifica alarme;
+    :Validar evento e regras\n de correlação;
+  endif
+}
+
+partition "Backend" {
+  :Validar dados e contexto\ndo condomínio;
+
+  if (Solicitação válida?) then (Sim)
+    :Criar chamado;
+    :Definir estado inicial Aberto;
+    :Registrar histórico inicial;
+  else (Não)
+    :Rejeitar criação ou encaminhar\nevento para tratamento de falha;
+    stop
+  endif
+}
+
+partition "Gestão do Chamado" {
+  :Disponibilizar chamado\npara acompanhamento;
+
+  if (É necessária atribuição?) then (Sim)
+    :Administrador atribui responsável;
+    :Alterar estado para Atribuido;
+    :Registrar transição no histórico;
+  else (Não)
+    :Manter fluxo conforme\nas regras de atribuição;
+  endif
+
+  :Responsável analisa o chamado;
+
+  if (Pode iniciar atendimento?) then (Sim)
+    :Alterar estado para EmAndamento;
+    :Registrar transição no histórico;
+  else (Não)
+    :Manter chamado no estado atual\nou encaminhar para reavaliação;
+  endif
+
+  while (Chamado em atendimento?) is (Sim)
+    :Executar diagnóstico e atendimento;
+
+    if (Depende de peça ou terceiro?) then (Sim)
+      :Alterar estado para\nAguardandoPecaTerceiro;
+      :Registrar transição no histórico;
+      :Aguardar dependência;
+      :Retomar análise conforme\nas regras de transição;
+    else (Não)
+      :Continuar atendimento;
+    endif
+
+    if (Problema resolvido?) then (Sim)
+      :Alterar estado para Resolvido;
+      :Registrar transição no histórico;
+      break
+    else (Não)
+      :Registrar atualização do atendimento;
+    endif
+  endwhile (Não)
+
+  if (Resolução aceita ou confirmada?) then (Sim)
+    :Alterar estado para Fechado;
+    :Registrar transição no histórico;
+  else (Não)
+    :Reabrir ou devolver para atendimento,\nse permitido pelas regras;
+    :Registrar transição no histórico;
+  endif
+}
+
+partition "Monitoramento e Comunicação" {
+  :Atualizar indicadores do chamado;
+  :Avaliar SLA conforme os critérios definidos;
+  :Enviar notificações aplicáveis;
+}
+
+stop
+
+@enduml

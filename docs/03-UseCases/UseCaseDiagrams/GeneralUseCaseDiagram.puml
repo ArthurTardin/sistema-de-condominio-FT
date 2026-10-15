@@ -1,7 +1,15 @@
 @startuml
+title Diagrama Geral de Casos de Uso
+
 skinparam backgroundColor #0f172a
 skinparam defaultTextAlignment center
 skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
+skinparam ActorFontColor #f8fafc
+skinparam UsecaseFontColor #f8fafc
+skinparam PackageFontColor #f8fafc
 
 skinparam actor {
   BackgroundColor #1e293b
@@ -30,125 +38,179 @@ actor "Master" as Master
 actor "Dispositivo IoT" as IoT
 
 rectangle "Plataforma de Gestão Condominial e IoT" {
-  
-  package "Autenticação e Sessão" {
-    usecase "Autenticar-se" as UC1
-    usecase "Gerenciar Dados da Conta" as UC2
-    usecase "Recuperar Senha" as UC3
+
+  package "Autenticação e Conta" {
+    usecase "Autenticar-se" as UC_Autenticar
+    usecase "Gerenciar Dados da Conta" as UC_Conta
   }
 
   package "Espaços Comuns e Reservas" {
-    usecase "Realizar Reservas" as UC4
-    usecase "Cancelar Reservas" as UC5
-    usecase "Consultar Reservas" as UC6
-    usecase "Consultar Disponibilidade" as UC7
-    usecase "Gerenciar Espaços Comuns" as UC8
+    usecase "Realizar Reservas" as UC_Reservar
+    usecase "Cancelar Reservas" as UC_Cancelar
+    usecase "Consultar Reservas" as UC_ConsultarReservas
+    usecase "Consultar Disponibilidade" as UC_Disponibilidade
+    usecase "Gerenciar Espaços Comuns" as UC_Espacos
   }
 
   package "Chamados e Ocorrências" {
-    usecase "Registrar Ocorrência" as UC9
-    usecase "Abrir Chamado" as UC10
-    usecase "Gerenciar Chamado" as UC11
-    usecase "Atribuir Chamado" as UC12
-    usecase "Acompanhar SLA" as UC13
-    usecase "Consultar Histórico" as UC14
+    usecase "Registrar Ocorrência" as UC_RegistrarOcorrencia
+    usecase "Consultar Ocorrências" as UC_ConsultarOcorrencias
+    usecase "Gerenciar Ocorrências" as UC_GerenciarOcorrencias
+    usecase "Abrir Chamado" as UC_AbrirChamado
+    usecase "Consultar Chamados" as UC_ConsultarChamados
+    usecase "Gerenciar Chamado" as UC_GerenciarChamado
+    usecase "Atribuir Chamado" as UC_AtribuirChamado
+    usecase "Consultar Histórico de Chamados" as UC_HistoricoChamados
+    usecase "Acompanhar SLA" as UC_SLA
   }
 
-  package "Gestão do Condomínio" {
-    usecase "Gerenciar Usuários" as UC15
-    usecase "Gerenciar Unidades" as UC16
-    usecase "Gerenciar Infraestrutura" as UC17
-    usecase "Gerenciar Dispositivos IoT" as UC18
-    usecase "Gerenciar Cobranças" as UC19
-    usecase "Dashboard Administrativo" as UC20
-    usecase "Configurar Condomínio" as UC21
+  package "Gestão Condominial" {
+    usecase "Gerenciar Usuários" as UC_Usuarios
+    usecase "Consultar Usuários" as UC_ConsultarUsuarios
+    usecase "Gerenciar Unidades" as UC_Unidades
+    usecase "Consultar Unidades" as UC_ConsultarUnidades
+    usecase "Gerenciar Cobranças" as UC_Cobrancas
+    usecase "Consultar Cobranças" as UC_ConsultarCobrancas
+    usecase "Gerenciar Infraestrutura" as UC_Infraestrutura
+    usecase "Consultar Ativos e Infraestrutura" as UC_ConsultarInfraestrutura
+    usecase "Gerenciar Dispositivos IoT" as UC_Dispositivos
+    usecase "Consultar Telemetria" as UC_Telemetria
+    usecase "Visualizar Dashboard Administrativo" as UC_Dashboard
+    usecase "Configurar Condomínio" as UC_ConfigCondominio
   }
 
-  package "Controle de Acesso" {
-    usecase "Gerenciar Credenciais" as UC22
-    usecase "Gerenciar Autorizações" as UC23
-    usecase "Consultar Registros de Acesso" as UC24
+  package "Controle de Acesso Físico" {
+    usecase "Gerenciar Credenciais" as UC_Credenciais
+    usecase "Gerenciar Autorizações de Acesso" as UC_Autorizacoes
+    usecase "Consultar Registros de Acesso" as UC_RegistrosAcesso
+    usecase "Executar Controle de Acesso" as UC_ControleAcesso
+    usecase "Enviar Eventos de Acesso" as UC_EventosAcesso
   }
 
-  package "Administração SaaS e Suporte" {
-    usecase "Gerenciar Condomínios" as UC25
-    usecase "Gerenciar Usuários Master" as UC26
-    usecase "Dashboard Global" as UC27
-    usecase "Auditoria e Logs" as UC28
-    usecase "Gerenciar Planos e Limites" as UC29
-    usecase "Suporte Emergencial" as UC30
-    usecase "Gerenciar Integrações" as UC31
+  package "Notificações e Auditoria" {
+    usecase "Consultar Notificações" as UC_ConsultarNotificacoes
+    usecase "Gerenciar Notificações" as UC_GerenciarNotificacoes
+    usecase "Consultar Auditoria e Logs" as UC_Auditoria
   }
 
-  package "Processos e Eventos de Infraestrutura" {
-    usecase "Processar Telemetria MQTT" as UC32
-    usecase "Gerar Alertas e Chamados IoT" as UC33
-    usecase "Processar Expiração de Reservas e Autorizações" as UC34
-    usecase "Monitorar SLA dos Chamados" as UC37
-    usecase "Sincronizar Autorizações com Dispositivos de Borda" as UC35
-    usecase "Disparar Notificações" as UC36
+  package "Administração Global da Plataforma" {
+    usecase "Gerenciar Condomínios" as UC_Condominios
+    usecase "Gerenciar Usuários Master" as UC_UsuariosMaster
+    usecase "Visualizar Dashboard Global" as UC_DashboardGlobal
+    usecase "Gerenciar Planos e Limites" as UC_Planos
+    usecase "Gerenciar Solicitações de Suporte" as UC_Suporte
+    usecase "Acessar Dados para Suporte Autorizado" as UC_AcessoSuporte
+    usecase "Gerenciar Integrações Globais" as UC_Integracoes
+    usecase "Gerenciar Configurações Globais" as UC_ConfigGlobal
+    usecase "Gerenciar Manutenção da Plataforma" as UC_Manutencao
+    usecase "Gerenciar Cobranças dos Condomínios" as UC_CobrancaSaaS
+    usecase "Consultar Saúde Operacional" as UC_Saude
+    usecase "Consultar Consumo de Recursos" as UC_Consumo
+    usecase "Consultar Notificações da Plataforma" as UC_NotificacoesGlobais
+    usecase "Gerenciar Notificações da Plataforma" as UC_GerenciarNotificacoesGlobais
+  }
+
+  package "Integração e Processos IoT" {
+    usecase "Receber Telemetria MQTT" as UC_ReceberTelemetria
+    usecase "Gerar Alarmes e Chamados IoT" as UC_AlarmesIoT
+    usecase "Sincronizar Autorizações com Dispositivos" as UC_SincronizarAcesso
+    usecase "Processar Expirações" as UC_Expiracoes
+    usecase "Disparar Notificações Automáticas" as UC_NotificacoesAutomaticas
+    usecase "Monitorar SLA dos Chamados" as UC_MonitorarSLA
   }
 }
 
-' Relações Morador
-Morador --> UC1
-Morador --> UC2
-Morador --> UC4
-Morador --> UC5
-Morador --> UC6
-Morador --> UC7
-Morador --> UC9
-Morador --> UC10
-Morador --> UC14
+' Morador
+Morador --> UC_Autenticar
+Morador --> UC_Conta
+Morador --> UC_Reservar
+Morador --> UC_Cancelar
+Morador --> UC_ConsultarReservas
+Morador --> UC_Disponibilidade
+Morador --> UC_RegistrarOcorrencia
+Morador --> UC_AbrirChamado
+Morador --> UC_ConsultarChamados
+Morador --> UC_HistoricoChamados
+Morador --> UC_ConsultarCobrancas
+Morador --> UC_ConsultarNotificacoes
 
-' Relações Funcionário
-Funcionario --> UC1
-Funcionario --> UC11
-Funcionario --> UC13
-Funcionario --> UC14
+' Funcionário
+Funcionario --> UC_Autenticar
+Funcionario --> UC_ConsultarInfraestrutura
+Funcionario --> UC_Infraestrutura
+Funcionario --> UC_ConsultarChamados
+Funcionario --> UC_GerenciarChamado
+Funcionario --> UC_SLA
+Funcionario --> UC_HistoricoChamados
+Funcionario --> UC_Telemetria
+Funcionario --> UC_ConsultarNotificacoes
 
-' Relações Administrador
-Administrador --> UC1
-Administrador --> UC4
-Administrador --> UC5
-Administrador --> UC6
-Administrador --> UC8
-Administrador --> UC9
-Administrador --> UC10
-Administrador --> UC11
-Administrador --> UC12
-Administrador --> UC15
-Administrador --> UC16
-Administrador --> UC17
-Administrador --> UC18
-Administrador --> UC19
-Administrador --> UC20
-Administrador --> UC21
-Administrador --> UC22
-Administrador --> UC23
-Administrador --> UC24
+' Administrador do condomínio
+Administrador --> UC_Autenticar
+Administrador --> UC_Reservar
+Administrador --> UC_Cancelar
+Administrador --> UC_ConsultarReservas
+Administrador --> UC_Espacos
+Administrador --> UC_RegistrarOcorrencia
+Administrador --> UC_ConsultarOcorrencias
+Administrador --> UC_GerenciarOcorrencias
+Administrador --> UC_AbrirChamado
+Administrador --> UC_ConsultarChamados
+Administrador --> UC_GerenciarChamado
+Administrador --> UC_AtribuirChamado
+Administrador --> UC_HistoricoChamados
+Administrador --> UC_Usuarios
+Administrador --> UC_ConsultarUsuarios
+Administrador --> UC_Unidades
+Administrador --> UC_ConsultarUnidades
+Administrador --> UC_Cobrancas
+Administrador --> UC_ConsultarCobrancas
+Administrador --> UC_Infraestrutura
+Administrador --> UC_ConsultarInfraestrutura
+Administrador --> UC_Dispositivos
+Administrador --> UC_Telemetria
+Administrador --> UC_Dashboard
+Administrador --> UC_ConfigCondominio
+Administrador --> UC_Credenciais
+Administrador --> UC_Autorizacoes
+Administrador --> UC_RegistrosAcesso
+Administrador --> UC_ConsultarNotificacoes
+Administrador --> UC_GerenciarNotificacoes
 
-' Relações Master
-Master --> UC1
-Master --> UC25
-Master --> UC26
-Master --> UC27
-Master --> UC28
-Master --> UC29
-Master --> UC30
-Master --> UC31
+' Master da plataforma
+Master --> UC_Autenticar
+Master --> UC_Condominios
+Master --> UC_UsuariosMaster
+Master --> UC_DashboardGlobal
+Master --> UC_Auditoria
+Master --> UC_Planos
+Master --> UC_Suporte
+Master --> UC_AcessoSuporte
+Master --> UC_Integracoes
+Master --> UC_ConfigGlobal
+Master --> UC_Manutencao
+Master --> UC_CobrancaSaaS
+Master --> UC_Saude
+Master --> UC_Consumo
+Master --> UC_NotificacoesGlobais
+Master --> UC_GerenciarNotificacoesGlobais
 
-' Relações IoT (Ator externo legítimo)
-IoT --> UC32
-IoT --> UC35
+' Dispositivo IoT
+IoT --> UC_ReceberTelemetria
+IoT --> UC_SincronizarAcesso
+IoT --> UC_ControleAcesso
+IoT --> UC_EventosAcesso
 
-' Recuperação de senha
-Morador --> UC3
-Funcionario --> UC3
-Administrador --> UC3
-Master --> UC3
+note bottom of UC_AlarmesIoT
+  Processo automático.
+  Detalhamento no diagrama
+  de processos automatizados.
+end note
 
-' Consulta do histórico
-Administrador --> UC14
+note bottom of UC_Expiracoes
+  Processamento interno
+  acionado por eventos
+  ou agendamento.
+end note
 
 @enduml

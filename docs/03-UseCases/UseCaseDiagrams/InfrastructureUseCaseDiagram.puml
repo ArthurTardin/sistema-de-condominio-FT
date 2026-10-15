@@ -1,0 +1,121 @@
+plantuml
+@startuml
+title Diagrama de Casos de Uso - Infraestrutura
+
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
+skinparam ActorFontColor #f8fafc
+skinparam UsecaseFontColor #f8fafc
+skinparam PackageFontColor #f8fafc
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Funcionário" as Funcionario
+actor "Administrador" as Administrador
+actor "Sistema" as Sistema
+
+rectangle "Sistema de Gestão Condominial - Infraestrutura" {
+
+  package "Consulta e Monitoramento" {
+    usecase "Consultar Ativos" as UC01
+    usecase "Consultar Detalhes do Ativo" as UC02
+    usecase "Consultar Estado Operacional" as UC03
+    usecase "Consultar Indicadores de Infraestrutura" as UC04
+  }
+
+  package "Gestão de Ativos" {
+    usecase "Cadastrar Ativo" as UC05
+    usecase "Atualizar Dados do Ativo" as UC06
+    usecase "Inativar Ativo" as UC07
+    usecase "Alterar Estado Operacional" as UC08
+    usecase "Registrar Interdição" as UC09
+    usecase "Registrar Necessidade de Manutenção" as UC10
+  }
+
+  package "Integração Operacional" {
+    usecase "Relacionar Ativo a Dispositivo IoT" as UC11
+    usecase "Atualizar Estado por Evento Automático" as UC12
+    usecase "Registrar Alteração Operacional" as UC13
+  }
+}
+
+' Funcionário
+Funcionario --> UC01
+Funcionario --> UC02
+Funcionario --> UC03
+Funcionario --> UC08
+Funcionario --> UC09
+Funcionario --> UC10
+
+' Administrador
+Administrador --> UC01
+Administrador --> UC02
+Administrador --> UC03
+Administrador --> UC04
+Administrador --> UC05
+Administrador --> UC06
+Administrador --> UC07
+Administrador --> UC08
+Administrador --> UC09
+Administrador --> UC10
+Administrador --> UC11
+
+' Sistema
+Sistema --> UC12
+Sistema --> UC13
+
+' Comportamentos associados
+UC08 ..> UC13 : <<include>>
+UC09 ..> UC08 : <<include>>
+UC10 ..> UC08 : <<include>>
+UC12 ..> UC13 : <<include>>
+
+note right of UC08
+  Estados operacionais previstos:
+  - Disponivel
+  - Interditado
+  - Manutencao
+  - Operacional
+  - Inativo
+
+  As transições permitidas devem
+  seguir as regras de negócio.
+end note
+
+note right of UC11
+  O vínculo entre ativo e
+  dispositivo IoT deve respeitar
+  as regras de integridade e
+  o contexto do condomínio.
+end note
+
+note bottom of UC12
+  A atualização automática só deve
+  ocorrer quando houver evento
+  confiável e regra definida para
+  aquele ativo ou dispositivo.
+end note
+
+@enduml

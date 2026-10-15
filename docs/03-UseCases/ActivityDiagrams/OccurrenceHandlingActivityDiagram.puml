@@ -1,0 +1,84 @@
+plantuml
+@startuml
+title Diagrama de Atividades - Tratamento de Ocorrências
+
+skinparam backgroundColor #0f172a
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #64748b
+skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
+
+start
+
+partition "Morador ou Administrador" {
+  :Acessar funcionalidade de ocorrências;
+  :Preencher dados da ocorrência;
+  :Enviar registro;
+}
+
+partition "Backend" {
+  :Autenticar usuário;
+  :Validar contexto do condomínio;
+  :Validar dados informados;
+
+  if (Registro válido e autorizado?) then (Sim)
+    :Registrar ocorrência;
+    :Associar autor e data do registro;
+  else (Não)
+    :Rejeitar registro;
+    :Informar motivo da rejeição;
+    stop
+  endif
+}
+
+partition "Administração do Condomínio" {
+  :Consultar ocorrência registrada;
+  :Analisar descrição e informações disponíveis;
+
+  if (Precisa de providência?) then (Sim)
+    :Definir providência adequada;
+
+    if (Exige atendimento operacional?) then (Sim)
+      :Solicitar abertura de chamado;
+    else (Não)
+      :Registrar providência administrativa;
+    endif
+
+  else (Não)
+    :Registrar que não há providência necessária;
+  endif
+}
+
+partition "Backend" {
+  if (Foi solicitada abertura de chamado?) then (Sim)
+    :Validar dados para abertura do chamado;
+
+    if (Pode abrir chamado?) then (Sim)
+      :Criar chamado relacionado à ocorrência;
+      :Registrar relação entre os registros;
+    else (Não)
+      :Informar falha no encaminhamento;
+      :Manter ocorrência registrada;
+    endif
+  else (Não)
+    :Manter tratamento sem criação de chamado;
+  endif
+
+  :Registrar eventos de auditoria aplicáveis;
+  :Enviar notificações quando previstas;
+}
+
+partition "Administração do Condomínio" {
+  :Consultar resultado do tratamento;
+}
+
+stop
+
+@enduml

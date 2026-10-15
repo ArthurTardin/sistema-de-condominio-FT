@@ -1,8 +1,12 @@
-
 @startuml
+title Diagrama de Casos de Uso - Reservas
+
 skinparam backgroundColor #0f172a
 skinparam defaultTextAlignment center
 skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
 
 skinparam actor {
   BackgroundColor #1e293b
@@ -25,33 +29,83 @@ skinparam rectangle {
 left to right direction
 
 actor "Morador" as Morador
-actor "Administrador" as Admin
+actor "Administrador" as Administrador
+actor "Sistema" as Sistema
 
-rectangle "Módulo de Reservas e Espaços Comuns" {
-  usecase "Consultar Disponibilidade" as UC_Disp
-  usecase "Realizar Reserva" as UC_Reserva
-  usecase "Cancelar Reserva" as UC_Canc
-  usecase "Consultar Reservas" as UC_Cons
-  usecase "Gerenciar Espaços Comuns" as UC_GerEsp
+rectangle "Sistema de Gestão Condominial - Reservas" {
 
-  usecase "Validar Regras de Negócio e Capacidade" as UC_ValNeg
-  usecase "Validar Inadimplência Financeira" as UC_ValFin
-  usecase "Verificar Conflitos de Horário" as UC_Conc
+  package "Consulta" {
+    usecase "Consultar Espaços Comuns" as UC01
+    usecase "Consultar Disponibilidade" as UC02
+    usecase "Consultar Próprias Reservas" as UC03
+    usecase "Consultar Reservas do Condomínio" as UC04
+  }
+
+  package "Operações de Reserva" {
+    usecase "Realizar Reserva" as UC05
+    usecase "Cancelar Reserva" as UC06
+    usecase "Validar Solicitação de Reserva" as UC07
+    usecase "Verificar Disponibilidade" as UC08
+    usecase "Validar Elegibilidade do Usuário" as UC09
+    usecase "Verificar Restrições de Inadimplência" as UC10
+  }
+
+  package "Configuração e Operação" {
+    usecase "Gerenciar Espaços Comuns" as UC11
+    usecase "Configurar Regras de Reserva" as UC12
+    usecase "Alterar Estado Operacional do Espaço" as UC13
+  }
+
+  package "Processamento Automático" {
+    usecase "Processar Expiração da Reserva" as UC14
+    usecase "Liberar Disponibilidade" as UC15
+    usecase "Gerar Autorização de Acesso" as UC16
+  }
 }
 
-Morador --> UC_Disp
-Morador --> UC_Reserva
-Morador --> UC_Canc
-Morador --> UC_Cons
+' Morador
+Morador --> UC01
+Morador --> UC02
+Morador --> UC03
+Morador --> UC05
+Morador --> UC06
 
-Admin --> UC_Disp
-Admin --> UC_Reserva
-Admin --> UC_Canc
-Admin --> UC_Cons
-Admin --> UC_GerEsp
+' Administrador
+Administrador --> UC01
+Administrador --> UC02
+Administrador --> UC04
+Administrador --> UC11
+Administrador --> UC12
+Administrador --> UC13
+Administrador --> UC06
 
-UC_Reserva ..> UC_ValNeg : <<include>>
-UC_Reserva ..> UC_ValFin : <<include>>
-UC_Reserva ..> UC_Conc : <<include>>
+' Sistema
+Sistema --> UC14
+Sistema --> UC15
+Sistema --> UC16
+
+' Relacionamentos de inclusão
+UC05 ..> UC07 : <<include>>
+UC07 ..> UC08 : <<include>>
+UC07 ..> UC09 : <<include>>
+UC07 ..> UC10 : <<include>>
+
+note right of UC10
+  Aplicar somente as restrições
+  de inadimplência definidas
+  nos requisitos e regras de negócio.
+end note
+
+note right of UC16
+  A autorização de acesso depende
+  das condições definidas para
+  a reserva confirmada.
+end note
+
+note bottom of UC14
+  O gatilho, os estados finais
+  e as regras de expiração devem
+  seguir os requisitos funcionais.
+end note
 
 @enduml

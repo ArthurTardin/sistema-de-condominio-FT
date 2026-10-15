@@ -1,0 +1,111 @@
+plantuml
+@startuml
+title Diagrama de Casos de Uso - Ocorrências
+
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
+skinparam ActorFontColor #f8fafc
+skinparam UsecaseFontColor #f8fafc
+skinparam PackageFontColor #f8fafc
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Morador" as Morador
+actor "Funcionário" as Funcionario
+actor "Administrador" as Administrador
+
+rectangle "Sistema de Gestão Condominial - Ocorrências" {
+
+  package "Registro e Consulta" {
+    usecase "Registrar Ocorrência" as UC01
+    usecase "Consultar Ocorrências" as UC02
+    usecase "Consultar Detalhes da Ocorrência" as UC03
+    usecase "Consultar Próprias Ocorrências" as UC04
+  }
+
+  package "Tratamento de Ocorrências" {
+    usecase "Gerenciar Ocorrência" as UC05
+    usecase "Atualizar Informações da Ocorrência" as UC06
+    usecase "Registrar Tratamento ou Providência" as UC07
+    usecase "Consultar Histórico da Ocorrência" as UC08
+  }
+
+  package "Encaminhamento" {
+    usecase "Avaliar Necessidade de Atendimento" as UC09
+    usecase "Abrir Chamado a partir da Ocorrência" as UC10
+  }
+}
+
+' Morador
+Morador --> UC01
+Morador --> UC04
+Morador --> UC03
+
+' Funcionário
+Funcionario --> UC02
+Funcionario --> UC03
+Funcionario --> UC05
+Funcionario --> UC06
+Funcionario --> UC07
+Funcionario --> UC08
+Funcionario --> UC09
+
+' Administrador
+Administrador --> UC01
+Administrador --> UC02
+Administrador --> UC03
+Administrador --> UC05
+Administrador --> UC06
+Administrador --> UC07
+Administrador --> UC08
+Administrador --> UC09
+Administrador --> UC10
+
+' Relacionamento condicional
+UC09 ..> UC10 : <<extend>>
+
+note right of UC01
+  O registro deve identificar
+  a ocorrência e seu autor,
+  respeitando as regras de
+  acesso e validação aplicáveis.
+end note
+
+note right of UC05
+  As operações permitidas,
+  os estados da ocorrência
+  e as permissões por perfil
+  devem seguir os requisitos
+  e as regras de negócio.
+end note
+
+note bottom of UC10
+  O encaminhamento para chamado
+  depende da necessidade de
+  atendimento e das regras
+  definidas pelo sistema.
+end note
+
+@enduml

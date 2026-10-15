@@ -1,0 +1,125 @@
+plantuml
+@startuml
+title Diagrama de Casos de Uso - Administração Master
+
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
+skinparam ActorFontColor #f8fafc
+skinparam UsecaseFontColor #f8fafc
+skinparam PackageFontColor #f8fafc
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Master" as Master
+
+rectangle "Plataforma SaaS - Administração Global" {
+
+  package "Gestão de Condomínios" {
+    usecase "Gerenciar Condomínios" as UC01
+    usecase "Consultar Dados do Condomínio" as UC02
+    usecase "Gerenciar Planos e Limites" as UC03
+    usecase "Consultar Histórico de Alterações" as UC04
+  }
+
+  package "Gestão de Contas Master" {
+    usecase "Gerenciar Usuários Master" as UC05
+    usecase "Gerenciar Permissões Master" as UC06
+  }
+
+  package "Suporte e Atendimento" {
+    usecase "Gerenciar Solicitações de Suporte" as UC07
+    usecase "Acessar Dados para Suporte Autorizado" as UC08
+    usecase "Consultar Auditoria e Logs" as UC09
+  }
+
+  package "Operação da Plataforma" {
+    usecase "Visualizar Dashboard Global" as UC10
+    usecase "Consultar Saúde Operacional" as UC11
+    usecase "Consultar Consumo de Recursos" as UC12
+    usecase "Gerenciar Integrações Globais" as UC13
+    usecase "Gerenciar Configurações Globais" as UC14
+    usecase "Gerenciar Manutenção da Plataforma" as UC15
+    usecase "Gerenciar Versões e Atualizações" as UC16
+  }
+
+  package "Gestão Financeira e Comunicação" {
+    usecase "Gerenciar Cobranças dos Condomínios" as UC17
+    usecase "Consultar Notificações da Plataforma" as UC18
+    usecase "Gerenciar Notificações da Plataforma" as UC19
+  }
+}
+
+' Associações do perfil Master
+Master --> UC01
+Master --> UC02
+Master --> UC03
+Master --> UC04
+Master --> UC05
+Master --> UC06
+Master --> UC07
+Master --> UC08
+Master --> UC09
+Master --> UC10
+Master --> UC11
+Master --> UC12
+Master --> UC13
+Master --> UC14
+Master --> UC15
+Master --> UC16
+Master --> UC17
+Master --> UC18
+Master --> UC19
+
+note right of UC08
+  O acesso para suporte deve ser
+  autorizado, limitado à finalidade
+  e registrado para auditoria.
+
+  Não deve permitir contornar
+  o isolamento entre condomínios.
+end note
+
+note right of UC01
+  O encerramento contratual do
+  condomínio deve respeitar as
+  regras de ciclo de vida dos dados,
+  preservando os registros históricos
+  e operacionais exigidos.
+end note
+
+note bottom of UC06
+  A gestão de permissões não deve
+  permitir elevação indevida de
+  privilégios nem remover os
+  controles de segurança da plataforma.
+end note
+
+note bottom of UC17
+  Refere-se à cobrança dos clientes
+  da plataforma SaaS, não às cobranças
+  condominiais dos moradores.
+end note
+
+@enduml

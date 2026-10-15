@@ -1,74 +1,105 @@
-
+plantuml
 @startuml
+title Diagrama de Atividades - Cancelamento de Reserva
+
 skinparam backgroundColor #0f172a
-skinparam defaultTextAlignment center
-skinparam ArrowColor #64748b
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
 skinparam ActivityBackgroundColor #1e293b
 skinparam ActivityBorderColor #475569
 skinparam ActivityFontColor #f8fafc
 skinparam ActivityDiamondBackgroundColor #334155
-skinparam ActivityDiamondBorderColor #475569
+skinparam ActivityDiamondBorderColor #64748b
 skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
 
-title Diagrama de Atividades - Cancelamento de Reserva
-
-|Morador / Administrador|
 start
-:Selecionar reserva;
-:Solicitar cancelamento;
 
-|Sistema / Backend|
-:Validar autenticação, permissão e escopo do Tenant;
-:Localizar reserva e verificar estado atual;
+partition "Solicitante" {
+  :Acessar as próprias reservas;
+  :Selecionar a reserva;
+  :Solicitar cancelamento;
+}
 
-if (Reserva pode ser cancelada?) then (Não)
-  :Retornar erro de estado inválido;
-  stop
-else (Sim)
-  if (Solicitante é Morador?) then (Sim)
-    :Validar prazo de cancelamento;
+partition "Backend" {
+  :Autenticar usuário;
+  :Validar contexto do condomínio;
+  :Consultar reserva;
 
-    if (Prazo respeitado?) then (Não)
-      :Retornar erro de prazo expirado;
-      stop
-    else (Sim)
-    endif
-  else (Administrador)
-    :Validar motivo do cancelamento;
-
-    if (Motivo obrigatório foi informado?) then (Não)
-      :Retornar erro de justificativa;
-      stop
-    else (Sim)
-    endif
-  endif
-
-  :Iniciar transação;
-  :Atualizar reserva para Cancelado\ncom controle de concorrência;
-  :Registrar transição no histórico;
-
-  if (Reserva possui autorização IoT?) then (Sim)
-    :Marcar autorização como Revogada;
-    :Registrar sincronização como Pendente;
+  if (Reserva encontrada?) then (Sim)
   else (Não)
+    :Informar que a reserva\nnão foi encontrada;
+    stop
   endif
 
-  if (Todas as operações obrigatórias foram concluídas?) then (Não)
-    :Reverter transação;
-    :Retornar erro de cancelamento;
+  :Validar permissão para cancelar;
+
+  if (Usuário autorizado?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar falta de autorização;
     stop
-  else (Sim)
-    if (Conflito de concorrência?) then (Sim)
-      :Reverter transação;
-      :Retornar conflito e solicitar nova consulta;
-      stop
-    else (Não)
-      :Confirmar transação;
-      :Agendar sincronização IoT e notificação;
-      :Retornar sucesso do cancelamento;
-      stop
-    endif
   endif
-endif
+
+  :Verificar estado atual da reserva;
+
+  if (Reserva pode ser cancelada?) then (Sim)
+  else (Não)
+    :Rejeitar cancelamento;
+    :Informar que o estado atual\nnão permite cancelar;
+    stop
+  endif
+
+  :Validar regras de cancelamento;
+
+  if (Regras atendidas?) then (Sim)
+  else (Não)
+    :Rejeitar cancelamento;
+    :Informar regra não atendida;
+    stop
+  endif
+
+  :Iniciar operação transacional;
+  :Atualizar estado da reserva\npara Cancelada;
+  :Registrar alteração para auditoria;
+
+  if (Operação persistida com sucesso?) then (Sim)
+    :Confirmar transação;
+  else (Não)
+    :Reverter transação;
+    :Informar falha no cancelamento;
+    stop
+  endif
+}
+
+partition "Controle de Acesso" {
+  :Localizar autorização vinculada\nà reserva;
+
+  if (Existe autorização vinculada?) then (Sim)
+    :Solicitar revogação ou atualização\nconforme as regras de acesso;
+
+    if (Revogação sincronizada?) then (Sim)
+      :Registrar sincronização concluída;
+    else (Não)
+      :Registrar sincronização pendente\nou falha;
+      :Agendar nova tentativa, se aplicável;
+    endif
+  else (Não)
+    :Continuar sem revogação de autorização;
+  endif
+}
+
+partition "Backend" {
+  :Agendar notificações aplicáveis;
+}
+
+partition "Solicitante" {
+  :Receber resultado do cancelamento;
+  :Consultar estado atualizado da reserva;
+}
+
+stop
 
 @enduml

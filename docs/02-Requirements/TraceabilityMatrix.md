@@ -164,30 +164,3 @@ Os testes devem ser definidos a partir dos requisitos e das regras de negócio. 
 | CT-CLIENTES | Consistência entre Web, Mobile e Desktop | Funcional e integração |
 
 Os identificadores acima representam grupos de teste propostos. Eles não devem ser tratados como casos de teste já especificados ou executados.
-
-## 9. Pendências de Rastreabilidade
-
-As seguintes atividades devem ser concluídas para que a matriz seja considerada completa:
-
-- [ ] Conferir todos os identificadores de requisitos funcionais em `FunctionalRequirements.md`.
-- [ ] Confirmar a associação de cada requisito funcional às regras de negócio aplicáveis.
-- [ ] Vincular os casos de uso formalizados em `UseCaseInventory.md` e nas especificações individuais.
-- [ ] Vincular as entidades e restrições ao DER consolidado e a `DataDictionary.md`.
-- [ ] Criar os casos de teste detalhados em `Docs/07-Testing/TestCases/`.
-- [ ] Garantir que cada requisito funcional possua pelo menos um teste aplicável.
-- [ ] Garantir que os requisitos não funcionais possuam critérios de validação verificáveis.
-- [ ] Revisar as relações após alterações em requisitos, regras, casos de uso ou modelo de dados.
-- [ ] Registrar requisitos sem cobertura, conflitos e decisões pendentes.
-
-## 10. Critérios de Conclusão
-
-A rastreabilidade será considerada suficiente para iniciar a implementação de um módulo quando:
-
-1. Os requisitos funcionais do módulo estiverem identificados e revisados.
-2. As regras de negócio aplicáveis estiverem documentadas e sem contradições conhecidas.
-3. Os casos de uso relevantes estiverem identificados e especificados no nível necessário.
-4. As entidades e restrições de dados necessárias estiverem identificadas.
-5. Os critérios de aceitação e os testes correspondentes estiverem definidos.
-6. As dependências externas e os requisitos não funcionais aplicáveis estiverem identificados.
-
-A conclusão da rastreabilidade de um módulo não significa que os testes já foram executados ou que a implementação está concluída. Esses estados devem ser acompanhados separadamente durante o desenvolvimento.

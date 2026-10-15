@@ -1,85 +1,131 @@
-
+plantuml
 @startuml
+title Diagrama de Atividades - Realização de Reserva
+
 skinparam backgroundColor #0f172a
-skinparam defaultTextAlignment center
-skinparam ArrowColor #64748b
+skinparam shadowing false
+skinparam ArrowColor #94a3b8
 skinparam ActivityBackgroundColor #1e293b
 skinparam ActivityBorderColor #475569
 skinparam ActivityFontColor #f8fafc
 skinparam ActivityDiamondBackgroundColor #334155
-skinparam ActivityDiamondBorderColor #475569
+skinparam ActivityDiamondBorderColor #64748b
 skinparam ActivityDiamondFontColor #f8fafc
+skinparam PartitionBackgroundColor #0f172a
+skinparam PartitionBorderColor #475569
+skinparam PartitionFontColor #f8fafc
 
-title Diagrama de Atividades - Processo de Reserva de Espaço Comum
-
-|Morador / Administrador|
 start
-:Selecionar espaço, data e horários;
-:Solicitar criação de reserva;
 
-|Sistema / Backend|
-:Validar autenticação e escopo do Tenant;
-:Verificar estado operacional do espaço;
+partition "Morador" {
+  :Acessar a funcionalidade de reservas;
+  :Consultar espaços disponíveis;
+  :Selecionar espaço, data e horário;
+  :Enviar solicitação de reserva;
+}
 
-if (Espaço operacionalmente disponível?) then (Não)
-  :Retornar erro de espaço indisponível;
-  stop
-else (Sim)
-  :Verificar disponibilidade do horário solicitado;
-
-  if (Horário disponível?) then (Não)
-    :Retornar erro de horário indisponível;
+partition "Backend" {
+  :Autenticar e identificar o usuário;
+  :Validar contexto do condomínio;
+  
+  if (Usuário autorizado?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar falta de autorização;
     stop
-  else (Sim)
-    :Validar regras de negócio;
-    note right
-      Capacidade, antecedência mínima,
-      duração máxima e demais restrições.
-    end note
-
-    if (Regras atendidas?) then (Não)
-      :Retornar erro de violação de regras;
-      stop
-    else (Sim)
-      :Verificar situação financeira da unidade;
-
-      if (Existe bloqueio por inadimplência?) then (Sim)
-        :Retornar erro de bloqueio financeiro;
-        stop
-      else (Não)
-        :Iniciar transação de criação da reserva;
-        :Persistir reserva com proteção contra concorrência;
-        note right
-          Restrição de exclusão no PostgreSQL
-          para impedir sobreposição de horários.
-        end note
-
-        if (Persistência concluída?) then (Não)
-          :Reverter transação;
-          :Retornar erro de conflito ou persistência;
-          stop
-        else (Sim)
-          :Registrar evento no histórico da reserva;
-          :Confirmar transação;
-
-          if (Espaço exige controle de acesso IoT?) then (Sim)
-            :Solicitar geração da autorização de acesso;
-
-            if (Autorização gerada?) then (Não)
-              :Registrar falha e programar retentativa;
-              :Manter reserva confirmada;
-            else (Sim)
-              :Registrar autorização e estado de sincronização;
-            endif
-          endif
-
-          :Agendar notificação de confirmação;
-          :Retornar sucesso da reserva;
-          stop
-        endif
-      endif
-    endif
   endif
-endif
+
+  :Validar dados da solicitação;
+
+  if (Solicitação válida?) then (Sim)
+  else (Não)
+    :Informar dados inválidos;
+    stop
+  endif
+
+  :Verificar elegibilidade do usuário;
+
+  if (Usuário elegível?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar motivo da rejeição;
+    stop
+  endif
+
+  :Aplicar regras de inadimplência;
+
+  if (Reserva permitida pelas regras financeiras?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar restrição aplicável;
+    stop
+  endif
+
+  :Verificar estado operacional do espaço;
+  
+  if (Espaço disponível para uso?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar indisponibilidade do espaço;
+    stop
+  endif
+
+  :Verificar disponibilidade do horário;
+
+  if (Horário disponível?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar conflito de horário;
+    stop
+  endif
+
+  :Validar regras de antecedência\ne duração da reserva;
+  
+  if (Regras de reserva atendidas?) then (Sim)
+  else (Não)
+    :Rejeitar solicitação;
+    :Informar regra não atendida;
+    stop
+  endif
+
+  :Tentar registrar reserva\ncom proteção contra concorrência;
+
+  if (Registro confirmado pelo banco?) then (Sim)
+    :Persistir reserva confirmada;
+  else (Não)
+    :Tratar conflito ou falha;
+    :Informar que a reserva\nnão foi confirmada;
+    stop
+  endif
+}
+
+partition "Integração de Acesso" {
+  :Verificar se a reserva exige\nautorização de acesso;
+
+  if (Autorização necessária?) then (Sim)
+    :Gerar autorização vinculada\nà reserva e à credencial;
+    :Registrar estado de sincronização;
+
+    if (Dispositivo sincronizado?) then (Sim)
+      :Registrar sincronização concluída;
+    else (Não)
+      :Manter sincronização pendente\nou registrar falha;
+    endif
+  else (Não)
+    :Não gerar autorização de acesso;
+  endif
+}
+
+partition "Backend" {
+  :Agendar notificações aplicáveis;
+  :Registrar eventos de auditoria;
+}
+
+partition "Morador" {
+  :Receber resultado da solicitação;
+  :Consultar reserva confirmada;
+}
+
+stop
 
 @enduml

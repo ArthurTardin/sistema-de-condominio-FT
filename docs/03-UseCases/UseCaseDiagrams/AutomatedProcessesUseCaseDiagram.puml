@@ -1,0 +1,161 @@
+plantuml
+@startuml
+title Diagrama de Casos de Uso - Processos Automatizados
+
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowColor #94a3b8
+skinparam ActorFontColor #f8fafc
+skinparam UsecaseFontColor #f8fafc
+skinparam PackageFontColor #f8fafc
+
+skinparam actor {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam usecase {
+  BackgroundColor #1e293b
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+skinparam rectangle {
+  BackgroundColor #0f172a
+  BorderColor #475569
+  FontColor #f8fafc
+}
+
+left to right direction
+
+actor "Agendador de Tarefas" as Scheduler
+actor "Broker MQTT" as MQTT
+actor "Serviço Externo" as ServicoExterno
+
+rectangle "Sistema de Gestão Condominial - Processos Automatizados" {
+
+  package "Reservas e Controle de Acesso" {
+    usecase "Processar Expiração de Reservas" as UC01
+    usecase "Expirar Autorizações de Acesso" as UC02
+    usecase "Revogar Autorizações Aplicáveis" as UC03
+    usecase "Sincronizar Autorizações com Dispositivos" as UC04
+  }
+
+  package "Chamados e SLA" {
+    usecase "Monitorar SLA dos Chamados" as UC05
+    usecase "Identificar Violações de SLA" as UC06
+    usecase "Atualizar Indicadores Operacionais" as UC07
+  }
+
+  package "Telemetria e Infraestrutura" {
+    usecase "Receber e Processar Telemetria" as UC08
+    usecase "Avaliar Limites e Condições" as UC09
+    usecase "Detectar Falhas de Dispositivos" as UC10
+    usecase "Gerar Alarmes e Chamados IoT" as UC11
+    usecase "Atualizar Estado Operacional" as UC12
+  }
+
+  package "Notificações e Cobranças" {
+    usecase "Enviar Notificações Automáticas" as UC13
+    usecase "Processar Vencimento de Cobranças" as UC14
+    usecase "Aplicar Regras de Inadimplência" as UC15
+  }
+
+  package "Confiabilidade e Segurança" {
+    usecase "Reprocessar Operações com Falha" as UC16
+    usecase "Expirar ou Revogar Sessões" as UC17
+    usecase "Registrar Eventos de Auditoria" as UC18
+    usecase "Executar Políticas de Retenção" as UC19
+    usecase "Limpar Dados Temporários Expirados" as UC20
+  }
+
+  package "Operação e Recuperação" {
+    usecase "Executar Backups" as UC21
+    usecase "Monitorar Disponibilidade dos Serviços" as UC22
+    usecase "Gerar Alertas Operacionais" as UC23
+  }
+}
+
+' Agendamento
+Scheduler --> UC01
+Scheduler --> UC02
+Scheduler --> UC05
+Scheduler --> UC07
+Scheduler --> UC10
+Scheduler --> UC13
+Scheduler --> UC14
+Scheduler --> UC16
+Scheduler --> UC17
+Scheduler --> UC19
+Scheduler --> UC20
+Scheduler --> UC21
+Scheduler --> UC22
+
+' Integrações externas
+MQTT --> UC08
+ServicoExterno --> UC13
+
+' Relacionamentos de processamento
+UC01 ..> UC02 : <<include>>
+UC02 ..> UC03 : <<include>>
+UC03 ..> UC04 : <<include>>
+
+UC05 ..> UC06 : <<include>>
+UC05 ..> UC07 : <<include>>
+
+UC08 ..> UC09 : <<include>>
+UC09 ..> UC10 : <<extend>>
+UC09 ..> UC11 : <<extend>>
+UC09 ..> UC12 : <<extend>>
+
+UC14 ..> UC15 : <<include>>
+
+UC10 ..> UC13 : <<include>>
+UC11 ..> UC13 : <<include>>
+UC06 ..> UC13 : <<include>>
+UC15 ..> UC13 : <<include>>
+
+UC16 ..> UC18 : <<include>>
+UC17 ..> UC18 : <<include>>
+UC19 ..> UC18 : <<include>>
+
+UC22 ..> UC23 : <<extend>>
+
+note right of UC02
+  Expiração e revogação devem
+  respeitar o estado lógico da
+  autorização e as regras de
+  validade definidas no projeto.
+end note
+
+note right of UC11
+  A geração de chamados deve
+  respeitar as regras de detecção,
+  deduplicação e correlação de alarmes.
+end note
+
+note right of UC15
+  As consequências da inadimplência,
+  inclusive eventuais bloqueios,
+  devem seguir as regras de negócio
+  documentadas.
+end note
+
+note bottom of UC19
+  Retenção não significa exclusão
+  indiscriminada. Aplicar os prazos
+  e as exceções legais e operacionais
+  definidos na política de dados.
+end note
+
+note bottom of UC21
+  Frequência, retenção, RPO e RTO
+  devem ser definidos na documentação
+  operacional antes da produção.
+end note
+
+@enduml
