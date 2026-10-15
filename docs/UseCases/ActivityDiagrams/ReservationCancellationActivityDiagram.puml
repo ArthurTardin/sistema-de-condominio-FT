@@ -1,0 +1,74 @@
+
+@startuml
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam ArrowColor #64748b
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #475569
+skinparam ActivityDiamondFontColor #f8fafc
+
+title Diagrama de Atividades - Cancelamento de Reserva
+
+|Morador / Administrador|
+start
+:Selecionar reserva;
+:Solicitar cancelamento;
+
+|Sistema / Backend|
+:Validar autenticação, permissão e escopo do Tenant;
+:Localizar reserva e verificar estado atual;
+
+if (Reserva pode ser cancelada?) then (Não)
+  :Retornar erro de estado inválido;
+  stop
+else (Sim)
+  if (Solicitante é Morador?) then (Sim)
+    :Validar prazo de cancelamento;
+
+    if (Prazo respeitado?) then (Não)
+      :Retornar erro de prazo expirado;
+      stop
+    else (Sim)
+    endif
+  else (Administrador)
+    :Validar motivo do cancelamento;
+
+    if (Motivo obrigatório foi informado?) then (Não)
+      :Retornar erro de justificativa;
+      stop
+    else (Sim)
+    endif
+  endif
+
+  :Iniciar transação;
+  :Atualizar reserva para Cancelado\ncom controle de concorrência;
+  :Registrar transição no histórico;
+
+  if (Reserva possui autorização IoT?) then (Sim)
+    :Marcar autorização como Revogada;
+    :Registrar sincronização como Pendente;
+  else (Não)
+  endif
+
+  if (Todas as operações obrigatórias foram concluídas?) then (Não)
+    :Reverter transação;
+    :Retornar erro de cancelamento;
+    stop
+  else (Sim)
+    if (Conflito de concorrência?) then (Sim)
+      :Reverter transação;
+      :Retornar conflito e solicitar nova consulta;
+      stop
+    else (Não)
+      :Confirmar transação;
+      :Agendar sincronização IoT e notificação;
+      :Retornar sucesso do cancelamento;
+      stop
+    endif
+  endif
+endif
+
+@enduml

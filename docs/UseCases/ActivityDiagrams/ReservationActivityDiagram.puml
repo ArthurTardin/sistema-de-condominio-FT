@@ -1,0 +1,85 @@
+
+@startuml
+skinparam backgroundColor #0f172a
+skinparam defaultTextAlignment center
+skinparam ArrowColor #64748b
+skinparam ActivityBackgroundColor #1e293b
+skinparam ActivityBorderColor #475569
+skinparam ActivityFontColor #f8fafc
+skinparam ActivityDiamondBackgroundColor #334155
+skinparam ActivityDiamondBorderColor #475569
+skinparam ActivityDiamondFontColor #f8fafc
+
+title Diagrama de Atividades - Processo de Reserva de Espaço Comum
+
+|Morador / Administrador|
+start
+:Selecionar espaço, data e horários;
+:Solicitar criação de reserva;
+
+|Sistema / Backend|
+:Validar autenticação e escopo do Tenant;
+:Verificar estado operacional do espaço;
+
+if (Espaço operacionalmente disponível?) then (Não)
+  :Retornar erro de espaço indisponível;
+  stop
+else (Sim)
+  :Verificar disponibilidade do horário solicitado;
+
+  if (Horário disponível?) then (Não)
+    :Retornar erro de horário indisponível;
+    stop
+  else (Sim)
+    :Validar regras de negócio;
+    note right
+      Capacidade, antecedência mínima,
+      duração máxima e demais restrições.
+    end note
+
+    if (Regras atendidas?) then (Não)
+      :Retornar erro de violação de regras;
+      stop
+    else (Sim)
+      :Verificar situação financeira da unidade;
+
+      if (Existe bloqueio por inadimplência?) then (Sim)
+        :Retornar erro de bloqueio financeiro;
+        stop
+      else (Não)
+        :Iniciar transação de criação da reserva;
+        :Persistir reserva com proteção contra concorrência;
+        note right
+          Restrição de exclusão no PostgreSQL
+          para impedir sobreposição de horários.
+        end note
+
+        if (Persistência concluída?) then (Não)
+          :Reverter transação;
+          :Retornar erro de conflito ou persistência;
+          stop
+        else (Sim)
+          :Registrar evento no histórico da reserva;
+          :Confirmar transação;
+
+          if (Espaço exige controle de acesso IoT?) then (Sim)
+            :Solicitar geração da autorização de acesso;
+
+            if (Autorização gerada?) then (Não)
+              :Registrar falha e programar retentativa;
+              :Manter reserva confirmada;
+            else (Sim)
+              :Registrar autorização e estado de sincronização;
+            endif
+          endif
+
+          :Agendar notificação de confirmação;
+          :Retornar sucesso da reserva;
+          stop
+        endif
+      endif
+    endif
+  endif
+endif
+
+@enduml
