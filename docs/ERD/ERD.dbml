@@ -1,0 +1,455 @@
+Project CondominiumIoT {
+  database_type: 'PostgreSQL'
+  Note: 'Arquitetura Multi-tenant, IoT, Controle de Acesso e Governança Enterprise'
+}
+
+Table tenant {
+  TenantID uuid [pk, default: `gen_random_uuid()`]
+  Nome varchar(255) [not null]
+  CNPJ varchar(14) [unique, not null, note: 'Global Unique Normalizado']
+  Slug varchar(100) [unique, not null]
+  Estado varchar(50) [not null]
+  DataEncerramento timestamp
+  MotivoEncerramento text
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete Comercial']
+
+  indexes {
+    CNPJ [unique]
+    Slug [unique]
+  }
+}
+
+Table usuario {
+  UsuarioID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [null, note: 'Nulo apenas para Master']
+  Nome varchar(255) [not null]
+  Email varchar(255) [not null, note: 'Global Unique Case-Insensitive']
+  SenhaHash varchar(255) [not null, note: 'Argon2id ou bcrypt']
+  Papel varchar(50) [not null, note: 'Morador, Funcionario, Administrador, Master']
+  Ativo boolean [default: true]
+  EmailVerificadoEm timestamp
+  UltimoLoginEm timestamp
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete Seletivo']
+
+  indexes {
+    (TenantID, Email) [unique, note: 'Índice parcial recomendado para Master (TenantID IS NULL) vs Tenants']
+  }
+}
+
+Table sessao {
+  SessaoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  RefreshTokenHash varchar(255) [unique, not null]
+  CriadaEm timestamp [default: `CURRENT_TIMESTAMP`]
+  ExpiraEm timestamp [not null]
+  RevogadaEm timestamp
+  MotivoRevogacao varchar(255)
+  SubstituidaPorSessaoID uuid
+  UltimoUsoEm timestamp
+  EnderecoIP varchar(45)
+  UserAgent text
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table token_recuperacao_senha {
+  TokenRecuperacaoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  TokenHash varchar(255) [unique, not null]
+  CriadoEm timestamp [default: `CURRENT_TIMESTAMP`]
+  ExpiraEm timestamp [not null]
+  UtilizadoEm timestamp
+  RevogadoEm timestamp
+  EnderecoIP varchar(45)
+}
+
+Table permissao_master {
+  PermissaoID uuid [pk, default: `gen_random_uuid()`]
+  Codigo varchar(100) [unique, not null]
+  Nome varchar(150) [not null]
+  Descricao text
+  Ativa boolean [default: true]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table usuario_master_permissao {
+  UsuarioMasterPermissaoID uuid [pk, default: `gen_random_uuid()`]
+  UsuarioMasterID uuid [not null]
+  PermissaoID uuid [not null]
+  ConcedidaPorID uuid [not null]
+  ConcedidaEm timestamp [default: `CURRENT_TIMESTAMP`]
+  RevogadaEm timestamp
+  Motivo text
+}
+
+Table unidade {
+  UnidadeID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  Bloco varchar(50) [not null]
+  Numero varchar(50) [not null]
+  Descricao text
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+
+  indexes {
+    (TenantID, Bloco, Numero) [unique]
+  }
+}
+
+Table usuario_unidade {
+  UsuarioUnidadeID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  UnidadeID uuid [not null]
+  TipoVinculo varchar(50) [not null, note: 'Proprietario, Inquilino, Dependente']
+  DataInicio date [not null]
+  DataFim date
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (TenantID, UsuarioID, UnidadeID) [note: 'Índice para controle de vínculos']
+  }
+}
+
+Table espaco_comum {
+  EspacoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  Nome varchar(150) [not null]
+  Descricao text
+  Capacidade int [not null]
+  DuracaoMaximaMinutos int [not null]
+  AntecedenciaMinimaMinutos int [not null]
+  HorariosFuncionamento text
+  EstadoOperacional varchar(50) [not null, note: 'Disponivel, Interditado, Manutencao, Inativo']
+  ExigeControleAcesso boolean [default: true]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table reserva {
+  ReservaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UnidadeID uuid [not null]
+  UsuarioID uuid [not null]
+  EspacoID uuid [not null]
+  DataHoraInicio timestamp [not null]
+  DataHoraFim timestamp [not null]
+  Estado varchar(50) [not null]
+  MotivoCancelamento text
+  CanceladaEm timestamp
+  CanceladaPorID uuid
+  Origem varchar(50)
+  RowVersion bigint [not null, default: 1, note: 'Concorrência Otimista']
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table historico_reserva {
+  HistoricoReservaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  ReservaID uuid [not null]
+  UsuarioID uuid [not null]
+  EstadoAnterior varchar(50)
+  EstadoNovo varchar(50) [not null]
+  Motivo text
+  Origem varchar(50)
+  DataHora timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table ativo_infraestrutura {
+  AtivoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  Nome varchar(150) [not null]
+  Tipo varchar(100) [not null]
+  Localizacao varchar(255)
+  Descricao text
+  EstadoOperacional varchar(50) [not null]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table dispositivo_iot {
+  DispositivoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  AtivoID uuid
+  MacAddress varchar(17) [unique, not null, note: 'Global Unique Normalizado']
+  Nome varchar(150) [not null]
+  Tipo varchar(100) [not null]
+  EstadoComunicacao varchar(50) [not null]
+  UltimaComunicacao timestamp
+  UltimoHeartbeat timestamp
+  CredencialDispositivoHash varchar(255) [not null]
+  Ativo boolean [default: true]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+
+  indexes {
+    MacAddress [unique]
+  }
+}
+
+Table registro_telemetria {
+  TelemetriaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  DispositivoID uuid [not null]
+  TipoLeitura varchar(100) [not null]
+  Valor decimal(18, 4) [not null]
+  UnidadeMedida varchar(50) [not null]
+  DataMedicao timestamp [not null]
+  IdentificadorMensagem varchar(100) [unique, not null, note: 'Idempotência MQTT']
+  QualidadeLeitura varchar(50)
+  PayloadOriginal text
+  RecebidaEm timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    IdentificadorMensagem [unique]
+  }
+}
+
+Table ocorrencia {
+  OcorrenciaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  AutorID uuid [not null]
+  ResponsavelID uuid
+  Titulo varchar(200) [not null]
+  Descricao text [not null]
+  Natureza varchar(100) [not null]
+  Situacao varchar(50) [not null]
+  Severidade varchar(50) [not null]
+  Origem varchar(50) [not null]
+  Localizacao varchar(255)
+  DataOcorrencia timestamp [not null]
+  ResolvidaEm timestamp
+  EncerradaEm timestamp
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table historico_ocorrencia {
+  HistoricoOcorrenciaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  OcorrenciaID uuid [not null]
+  UsuarioID uuid [not null]
+  CampoAlterado varchar(100)
+  ValorAnterior text
+  ValorNovo text
+  Comentario text
+  Origem varchar(50)
+  DataHora timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table chamado {
+  ChamadoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  SolicitanteID uuid [not null]
+  ResponsavelID uuid
+  UnidadeID uuid
+  ReservaID uuid
+  OcorrenciaID uuid
+  AtivoID uuid
+  DispositivoID uuid
+  Tipo varchar(50) [not null, note: 'Manutencao, AlarmeIoT']
+  Titulo varchar(200) [not null]
+  Descricao text [not null]
+  Estado varchar(50) [not null, note: 'Aberto, Atribuido, EmAndamento, AguardandoPecaTerceiro, Resolvido, Fechado, Cancelado']
+  Severidade varchar(50) [not null]
+  DataAbertura timestamp [default: `CURRENT_TIMESTAMP`]
+  DataAtribuicao timestamp
+  DataResolucao timestamp
+  DataFechamento timestamp
+  MotivoCancelamento text
+  Origem varchar(50) [not null]
+  ChaveIdempotencia varchar(100) [unique]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table historico_chamado {
+  HistoricoChamadoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  ChamadoID uuid [not null]
+  UsuarioID uuid [not null]
+  EstadoAnterior varchar(50)
+  EstadoNovo varchar(50) [not null]
+  TipoEvento varchar(100) [not null]
+  Comentario text
+  Origem varchar(50) [not null]
+  DataHora timestamp [default: `CURRENT_TIMESTAMP`]
+  DadosAdicionais text
+}
+
+Table comentario_chamado {
+  ComentarioChamadoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  ChamadoID uuid [not null]
+  AutorID uuid [not null]
+  Conteudo text [not null]
+  Origem varchar(50) [not null]
+  CriadoEm timestamp [default: `CURRENT_TIMESTAMP`]
+  EditadoEm timestamp
+  ExcluidoEm timestamp
+}
+
+Table evento_infraestrutura {
+  EventoInfraestruturaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  DispositivoID uuid
+  AtivoID uuid
+  TelemetriaID uuid
+  CodigoRegra varchar(100) [not null]
+  TipoEvento varchar(100) [not null]
+  Severidade varchar(50) [not null]
+  Descricao text [not null]
+  ChaveCorrelacao varchar(100)
+  DetectadoEm timestamp [not null]
+  ResolvidoEm timestamp
+  Estado varchar(50) [not null]
+  ChamadoID uuid
+  DadosEvento text
+}
+
+Table cobranca_condominial {
+  CobrancaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UnidadeID uuid [not null]
+  Competencia date [not null]
+  Valor decimal(18, 2) [not null, note: 'Não negativo']
+  DataVencimento date [not null]
+  DataPagamento timestamp [note: 'Nula se não paga']
+  Situacao varchar(50) [not null]
+  Descricao text
+  IdentificadorExterno varchar(150)
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (TenantID, UnidadeID, Competencia) [unique]
+  }
+}
+
+Table credencial_acesso {
+  CredencialID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  Tipo varchar(50) [not null, note: 'TagRFID, SenhaNumerica, Biometria']
+  ValorReferencia varchar(255) [not null]
+  Estado varchar(50) [not null]
+  DataEmissao timestamp [not null]
+  DataExpiracao timestamp
+  DataRevogacao timestamp
+  EmitidaPorID uuid [not null]
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  DeletedAt timestamp [note: 'Soft Delete']
+}
+
+Table historico_credencial {
+  HistoricoCredencialID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  CredencialID uuid [not null]
+  UsuarioID uuid [not null]
+  TipoEvento varchar(100) [not null]
+  EstadoAnterior varchar(50)
+  EstadoNovo varchar(50) [not null]
+  Motivo text
+  DadosAdicionais text
+  DataHora timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table autorizacao_acesso {
+  AutorizacaoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  ReservaID uuid
+  CredencialID uuid [not null]
+  UsuarioID uuid [not null]
+  DispositivoID uuid [not null]
+  EstadoLogico varchar(50) [not null, note: 'Ativa, Expirada, Revogada']
+  EstadoSincronizacao varchar(50) [not null, note: 'Pendente, Sincronizado, Falhou']
+  ValidoDe timestamp [not null]
+  ValidoAte timestamp [not null]
+  UltimaSincronizacao timestamp
+  UltimoErro text
+  RevogadaEm timestamp
+  MotivoRevogacao text
+  CreatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table historico_autorizacao_acesso {
+  HistoricoAutorizacaoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  AutorizacaoID uuid [not null]
+  UsuarioID uuid [not null]
+  TipoEvento varchar(100) [not null]
+  EstadoLogicoAnterior varchar(50)
+  EstadoLogicoNovo varchar(50) [not null]
+  EstadoSyncAnterior varchar(50)
+  EstadoSyncNovo varchar(50) [not null]
+  Detalhes text
+  DataHora timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table registro_acesso {
+  RegistroAcessoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid
+  CredencialID uuid
+  DispositivoID uuid [not null]
+  AutorizacaoID uuid
+  ReservaID uuid
+  Resultado varchar(50) [not null]
+  MotivoNegacao text
+  DataHora timestamp [not null]
+  Origem varchar(50) [not null]
+  IdentificadorEvento varchar(100) [unique, not null]
+  DadosAdicionais text
+
+  indexes {
+    IdentificadorEvento [unique]
+  }
+}
+
+Table notificacao {
+  NotificacaoID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  Categoria varchar(50) [not null, note: 'security, legal, ticket, general']
+  Titulo varchar(200) [not null]
+  Mensagem text [not null]
+  Canal varchar(50) [not null]
+  EstadoProcessamento varchar(50) [not null]
+  ChaveIdempotencia varchar(100)
+  DataCriacao timestamp [default: `CURRENT_TIMESTAMP`]
+  DataAgendamento timestamp
+  DataEntrega timestamp
+  QuantidadeTentativas int [default: 0]
+  UltimoErro text
+  DadosAdicionais text
+}
+
+Table preferencia_notificacao {
+  PreferenciaID uuid [pk, default: `gen_random_uuid()`]
+  TenantID uuid [not null]
+  UsuarioID uuid [not null]
+  Categoria varchar(50) [not null]
+  Canal varchar(50) [not null]
+  Habilitada boolean [default: true]
+  UpdatedAt timestamp [default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (TenantID, UsuarioID, Categoria, Canal) [unique]
+  }
+}
