@@ -25,8 +25,7 @@ O Produto Mínimo Viável (MVP) foi reduzido ao núcleo operacional do sistema. 
 - Gerenciamento de usuários.
 - Gerenciamento de unidades e vínculos entre usuários e unidades.
 - Gerenciamento de espaços comuns.
-- Gerenciamento de configurações do condomínio.
-- Gerenciamento operacional de ativos e recursos da infraestrutura.
+- Configuração das regras básicas de reserva dos espaços.
 
 ### 2.3. Reservas
 
@@ -37,8 +36,7 @@ O Produto Mínimo Viável (MVP) foi reduzido ao núcleo operacional do sistema. 
 - Validação das regras de reserva.
 - Aplicação de restrições de capacidade, duração e antecedência.
 - Prevenção de conflitos de horário.
-- Aplicação de restrições financeiras às reservas, conforme as regras definidas.
-- Geração e gerenciamento de autorizações de acesso vinculadas às reservas, quando aplicável.
+- Histórico das alterações da reserva.
 
 ### 2.4. Ocorrências e chamados
 
@@ -48,8 +46,8 @@ O Produto Mínimo Viável (MVP) foi reduzido ao núcleo operacional do sistema. 
 - Gerenciamento dos estados dos chamados.
 - Consulta de chamados.
 - Consulta do histórico de alterações.
-- Acompanhamento de prazos e SLA.
-- Geração automática de chamados a partir de eventos relevantes da infraestrutura.
+- Transições de estado conforme as regras do chamado.
+- Acompanhamento básico de prazos, quando aplicável ao fluxo do MVP.
 
 ### 2.5. Entrega técnica mínima
 - API backend documentada.
@@ -60,7 +58,7 @@ O Produto Mínimo Viável (MVP) foi reduzido ao núcleo operacional do sistema. 
 
 ## 3. Funcionalidades previstas para versões futuras
 
-As funcionalidades desta seção representam possibilidades de evolução do produto. Sua inclusão no MVP dependerá de uma decisão explícita e da correspondente atualização dos requisitos e do planejamento.
+As funcionalidades desta seção representam possibilidades de evolução do produto. Elas não fazem parte do MVP atual e somente devem entrar no desenvolvimento após revisão do escopo, dos requisitos, da arquitetura e dos testes.
 
 ### 3.1. Reconhecimento facial
 
@@ -97,10 +95,12 @@ Por envolver dados biométricos, essa funcionalidade deverá ter seus requisitos
 - Indicadores avançados para administração e suporte.
 
 ### 3.5. Módulos adiados após o núcleo operacional
+- Gestão operacional de ativos e recursos da infraestrutura.
 - Gestão financeira básica e bloqueios por inadimplência.
 - Notificações multicanal.
 - Integração MQTT, telemetria e detecção automática de falhas.
 - Controle físico de acesso e sincronização de autorizações.
+- Geração automática de chamados a partir de eventos de infraestrutura.
 - Dashboards operacionais avançados.
 - Administração comercial da plataforma, planos e cobrança SaaS.
 - Aplicações mobile e desktop nativas.

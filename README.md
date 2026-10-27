@@ -137,9 +137,9 @@ A documentação do projeto está concentrada em [`docs/`](docs/).
 | `02-Requirements/` | Requisitos funcionais, não funcionais e regras de negócio. |
 | `03-UseCases/` | Inventário, especificações e diagramas de casos de uso. |
 | `04-DataModel/` | DER, dicionário de dados e restrições. |
-| `05-Architecture/` | Arquitetura, APIs e integrações. |
+| `05-Architecture/` | Arquitetura, APIs e integrações. [`ArchitectureOverview.md`](docs/05-Architecture/ArchitectureOverview.md) é a referência canônica. |
 | `06-SecurityPrivacy/` | Segurança, privacidade e riscos. |
-| `07-Testing/` | Estratégia e casos de teste. |
+| `07-Testing/` | Estratégia, plano e casos de teste do MVP. |
 | `08-Development/` | MVP, backlog e padrões de desenvolvimento. |
 | `09-Operations/` | Implantação, monitoramento e recuperação. |
 | `10-UserGuides/` | Guias de instalação e utilização. |
@@ -147,7 +147,7 @@ A documentação do projeto está concentrada em [`docs/`](docs/).
 
 ## Como executar
 
-**A execução ainda não está disponível nesta fase do projeto.**
+**A execução ainda não está disponível nesta fase do projeto.** O contrato de instalação e execução está descrito em [`docs/10-UserGuides/Installation.md`](docs/10-UserGuides/Installation.md) e será preenchido com comandos reais quando a implementação for adicionada.
 
 Antes de publicar instruções de execução, serão definidos e implementados os componentes necessários, incluindo:
 
