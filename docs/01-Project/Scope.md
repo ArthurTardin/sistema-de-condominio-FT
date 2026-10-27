@@ -8,7 +8,7 @@ O escopo serve como referência para a definição dos requisitos, arquitetura, 
 
 ## 2. Escopo do MVP
 
-O Produto Mínimo Viável (MVP) contempla as funcionalidades essenciais para a gestão condominial, incluindo operações administrativas, processos operacionais, monitoramento da infraestrutura e integração com dispositivos IoT.
+O Produto Mínimo Viável (MVP) foi reduzido ao núcleo operacional do sistema. A primeira versão deve validar autenticação, isolamento entre condomínios, cadastros essenciais, reservas e chamados antes da inclusão de integrações físicas e módulos financeiros.
 
 ### 2.1. Autenticação e controle de acesso
 
@@ -16,9 +16,8 @@ O Produto Mínimo Viável (MVP) contempla as funcionalidades essenciais para a g
 - Controle de acesso baseado em papéis e permissões.
 - Gerenciamento de sessões.
 - Isolamento de dados entre condomínios.
-- Gerenciamento de credenciais de acesso físico.
-- Geração, consulta e revogação de autorizações de acesso.
-- Registro de eventos de acesso.
+- Gestão de sessões e recuperação de senha.
+- Auditoria das operações relevantes.
 
 ### 2.2. Gestão condominial
 
@@ -52,75 +51,12 @@ O Produto Mínimo Viável (MVP) contempla as funcionalidades essenciais para a g
 - Acompanhamento de prazos e SLA.
 - Geração automática de chamados a partir de eventos relevantes da infraestrutura.
 
-### 2.5. Gestão financeira básica
-
-- Gerenciamento de cobranças condominiais.
-- Consulta de cobranças.
-- Identificação de cobranças pendentes e situações de inadimplência.
-- Aplicação de restrições financeiras às operações, quando previsto nas regras de negócio.
-- Processamento automático de eventos relacionados ao vencimento das cobranças.
-
-O MVP não tem como objetivo substituir sistemas completos de contabilidade, gestão empresarial ou serviços bancários.
-
-### 2.6. Notificações
-
-- Notificações relacionadas a reservas.
-- Notificações relacionadas a chamados e ocorrências.
-- Notificações de eventos operacionais.
-- Alertas relacionados à infraestrutura e aos dispositivos IoT.
-- Processamento automático de notificações.
-- Consulta e gerenciamento das notificações disponibilizadas aos usuários.
-
-### 2.7. Infraestrutura e integração com IoT
-
-- Cadastro e gerenciamento de dispositivos IoT.
-- Comunicação com dispositivos por meio do protocolo MQTT.
-- Recebimento e processamento de telemetria.
-- Monitoramento da infraestrutura física.
-- Identificação de condições anormais de operação.
-- Geração de alertas a partir de eventos de telemetria.
-- Geração automática de chamados para eventos relevantes.
-- Detecção de falhas de dispositivos.
-- Integração com dispositivos de controle de acesso.
-- Sincronização de autorizações com dispositivos físicos.
-- Recebimento e registro de eventos de acesso.
-
-### 2.8. Processos automatizados
-
-- Processamento da expiração de reservas.
-- Processamento da expiração e revogação de autorizações de acesso.
-- Envio automático de notificações.
-- Monitoramento de SLA.
-- Processamento de vencimentos de cobranças.
-- Detecção de falhas de dispositivos IoT.
-- Atualização automática de estados operacionais, quando aplicável.
-- Retentativas de operações que falharam.
-- Registro de eventos de auditoria.
-- Expiração e revogação de sessões.
-- Limpeza de dados temporários expirados.
-- Execução de backups automatizados.
-- Monitoramento da disponibilidade dos serviços.
-- Execução das políticas de retenção de dados.
-
-### 2.9. Monitoramento administrativo
-
-- Visualização de indicadores de reservas.
-- Acompanhamento de chamados e respectivos SLA.
-- Consulta de indicadores de inadimplência.
-- Monitoramento do estado da infraestrutura.
-- Acompanhamento do estado dos dispositivos IoT.
-- Consulta de indicadores relevantes de telemetria.
-- Visualização de eventos operacionais pertinentes à administração.
-
-### 2.10. Administração da plataforma multi-tenant
-
-- Gerenciamento dos condomínios cadastrados na plataforma.
-- Isolamento dos dados de cada condomínio.
-- Gerenciamento de usuários e permissões de nível de plataforma.
-- Gerenciamento de planos e limites de utilização.
-- Consulta de indicadores operacionais da plataforma.
-- Gerenciamento de configurações globais.
-- Consulta de registros de auditoria e informações necessárias à operação da plataforma.
+### 2.5. Entrega técnica mínima
+- API backend documentada.
+- Persistência em PostgreSQL e migrações.
+- Interface inicial para morador e administração.
+- Testes automatizados dos fluxos principais.
+- Instruções para execução local.
 
 ## 3. Funcionalidades previstas para versões futuras
 
@@ -159,6 +95,16 @@ Por envolver dados biométricos, essa funcionalidade deverá ter seus requisitos
 - Gestão ampliada de assinaturas e planos.
 - Novas integrações externas.
 - Indicadores avançados para administração e suporte.
+
+### 3.5. Módulos adiados após o núcleo operacional
+- Gestão financeira básica e bloqueios por inadimplência.
+- Notificações multicanal.
+- Integração MQTT, telemetria e detecção automática de falhas.
+- Controle físico de acesso e sincronização de autorizações.
+- Dashboards operacionais avançados.
+- Administração comercial da plataforma, planos e cobrança SaaS.
+- Aplicações mobile e desktop nativas.
+- Backups automatizados e observabilidade de produção.
 
 ## 4. Itens fora do escopo
 
@@ -202,7 +148,7 @@ Alterações aprovadas deverão refletir-se nos documentos afetados, preservando
 
 ## 7. Status do escopo
 
-**Status:** definido inicialmente, sujeito à validação final dos limites do MVP.
+**Status:** recorte do MVP validado: núcleo operacional. O detalhamento continua sujeito à revisão durante a implementação.
 
 Este documento estabelece uma referência para o planejamento do produto. A inclusão de uma funcionalidade neste escopo não significa que ela já esteja implementada ou validada.
 
