@@ -1,0 +1,135 @@
+@startuml IoTTelemetryProcessingSequenceDiagram
+
+title IoT Telemetry Processing Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+participant "Dispositivo IoT" as Device
+participant "Broker MQTT" as MQTT
+participant "Consumidor de Telemetria" as Consumer
+participant "Validador de Dispositivos" as DeviceValidator
+participant "Serviço de Telemetria" as TelemetryService
+participant "Motor de Regras" as RuleEngine
+participant "Serviço de Chamados" as TicketService
+participant "Serviço de Notificações" as NotificationService
+database "Banco de Dados" as DB
+
+Device -> MQTT : Publicar leitura no tópico autorizado
+activate MQTT
+
+MQTT -> Consumer : Entregar mensagem MQTT
+activate Consumer
+
+Consumer -> DeviceValidator : Validar identidade e vínculo do dispositivo
+activate DeviceValidator
+
+DeviceValidator -> DB : Consultar dispositivo registrado
+activate DB
+DB --> DeviceValidator : Dados do dispositivo
+deactivate DB
+
+DeviceValidator --> Consumer : Resultado da validação
+deactivate DeviceValidator
+
+alt Dispositivo inválido ou não autorizado
+
+    Consumer -> Consumer : Rejeitar mensagem e registrar falha
+    Consumer --> MQTT : Encerrar processamento da mensagem
+
+else Dispositivo válido
+
+    Consumer -> TelemetryService : Processar leitura
+    activate TelemetryService
+
+    TelemetryService -> TelemetryService : Validar formato, valores e timestamp
+
+    alt Mensagem inválida
+
+        TelemetryService -> TelemetryService : Registrar rejeição
+        TelemetryService --> Consumer : Leitura rejeitada
+
+    else Mensagem válida
+
+        TelemetryService -> DB : Verificar idempotência da leitura
+        activate DB
+        DB --> TelemetryService : Resultado da verificação
+
+        alt Leitura já processada
+
+            TelemetryService --> Consumer : Ignorar duplicata
+
+        else Nova leitura
+
+            TelemetryService -> DB : Persistir registro de telemetria
+            DB --> TelemetryService : Registro persistido
+
+            TelemetryService -> RuleEngine : Avaliar limites e regras
+            activate RuleEngine
+
+            RuleEngine -> DB : Consultar regras aplicáveis
+            DB --> RuleEngine : Limites configurados
+
+            RuleEngine -> RuleEngine : Avaliar leitura
+
+            alt Limite não violado
+
+                RuleEngine --> TelemetryService : Sem alarme
+
+            else Limite violado
+
+                RuleEngine --> TelemetryService : Condição de alarme detectada
+
+                TelemetryService -> DB : Registrar ou correlacionar alarme
+                DB --> TelemetryService : Resultado da correlação
+
+                opt Novo chamado necessário
+
+                    TelemetryService -> TicketService : Solicitar chamado do tipo AlarmeIoT
+                    activate TicketService
+
+                    TicketService -> DB : Criar chamado e histórico inicial
+                    DB --> TicketService : Resultado da criação
+
+                    TicketService --> TelemetryService : Resultado do processamento
+                    deactivate TicketService
+
+                end
+
+                TelemetryService -> NotificationService : Solicitar notificação do alarme
+                activate NotificationService
+                NotificationService --> TelemetryService : Solicitação processada
+                deactivate NotificationService
+
+            end
+
+            deactivate RuleEngine
+
+        end
+
+        deactivate DB
+
+    end
+
+    TelemetryService --> Consumer : Resultado do processamento
+    deactivate TelemetryService
+
+end
+
+deactivate Consumer
+deactivate MQTT
+
+@enduml

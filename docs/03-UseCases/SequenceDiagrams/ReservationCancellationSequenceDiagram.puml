@@ -1,0 +1,99 @@
+@startuml ReservationCancellationSequenceDiagram
+
+title Reservation Cancellation Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Morador" as Morador
+
+participant "API" as API
+participant "Autorização" as Auth
+participant "Serviço de Reservas" as ReservaService
+participant "Serviço de Notificações" as NotificationService
+database "Banco de Dados" as DB
+
+Morador -> API : Solicitar cancelamento da reserva
+activate API
+
+API -> Auth : Validar autenticação e permissões
+activate Auth
+
+Auth --> API : Autorização válida
+deactivate Auth
+
+API -> ReservaService : Cancelar reserva(reservaId)
+activate ReservaService
+
+ReservaService -> DB : Buscar reserva
+activate DB
+
+DB --> ReservaService : Dados da reserva
+deactivate DB
+
+alt Reserva inexistente
+
+    ReservaService --> API : Reserva não encontrada
+    API --> Morador : Retornar erro
+
+else Reserva encontrada
+
+    ReservaService -> ReservaService : Validar proprietário ou permissão
+    ReservaService -> ReservaService : Validar estado da reserva
+
+    alt Usuário sem permissão
+
+        ReservaService --> API : Cancelamento não autorizado
+        API --> Morador : Retornar erro
+
+    else Reserva já cancelada ou não cancelável
+
+        ReservaService --> API : Reserva não pode ser cancelada
+        API --> Morador : Retornar erro
+
+    else Reserva pode ser cancelada
+
+        ReservaService -> DB : Iniciar transação
+        activate DB
+
+        ReservaService -> DB : Atualizar estado para Cancelada
+        DB --> ReservaService : Reserva atualizada
+
+        ReservaService -> DB : Registrar alteração da reserva
+        DB --> ReservaService : Histórico registrado
+
+        ReservaService -> DB : Confirmar transação
+        DB --> ReservaService : Transação confirmada
+
+        deactivate DB
+
+        ReservaService -> NotificationService : Enviar notificação de cancelamento
+        activate NotificationService
+
+        NotificationService --> ReservaService : Notificação processada
+        deactivate NotificationService
+
+        ReservaService --> API : Cancelamento concluído
+        API --> Morador : Confirmar cancelamento
+
+    end
+
+end
+
+deactivate ReservaService
+deactivate API
+
+@enduml

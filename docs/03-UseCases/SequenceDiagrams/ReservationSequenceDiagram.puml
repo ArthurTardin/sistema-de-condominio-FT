@@ -1,0 +1,109 @@
+@startuml ReservationSequenceDiagram
+
+title Reservation Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Morador" as Morador
+
+participant "API" as API
+participant "Autorização" as Auth
+participant "Serviço de Reservas" as ReservaService
+participant "Serviço de Espaços" as EspacoService
+database "Banco de Dados" as DB
+
+Morador -> API : Solicitar criação de reserva
+activate API
+
+API -> Auth : Validar autenticação e permissões
+activate Auth
+
+Auth --> API : Autorização válida
+deactivate Auth
+
+API -> ReservaService : Criar reserva(dados)
+activate ReservaService
+
+ReservaService -> EspacoService : Consultar espaço
+activate EspacoService
+
+EspacoService -> DB : Buscar espaço
+activate DB
+
+DB --> EspacoService : Dados do espaço
+deactivate DB
+
+EspacoService --> ReservaService : Espaço encontrado
+deactivate EspacoService
+
+alt Espaço inexistente ou inativo
+
+    ReservaService --> API : Erro: espaço indisponível
+    API --> Morador : Retornar erro
+
+else Espaço válido
+
+    ReservaService -> ReservaService : Validar período
+    ReservaService -> ReservaService : Validar antecedência
+    ReservaService -> ReservaService : Validar duração máxima
+    ReservaService -> ReservaService : Validar regras do espaço
+
+    alt Dados inválidos
+
+        ReservaService --> API : Erro: regras de reserva violadas
+        API --> Morador : Retornar erro
+
+    else Dados válidos
+
+        ReservaService -> DB : Verificar reservas conflitantes
+        activate DB
+
+        DB --> ReservaService : Resultado da consulta
+
+        alt Existe conflito
+
+            ReservaService -> DB : Registrar tentativa rejeitada
+            DB --> ReservaService : Registro concluído
+
+            ReservaService --> API : Conflito de horário
+            API --> Morador : Informar indisponibilidade
+
+        else Sem conflito
+
+            ReservaService -> DB : Iniciar transação
+            DB --> ReservaService : Transação iniciada
+
+            ReservaService -> DB : Criar reserva
+            DB --> ReservaService : Reserva criada
+
+            ReservaService -> DB : Confirmar transação
+            DB --> ReservaService : Transação confirmada
+
+            ReservaService --> API : Reserva criada
+            API --> Morador : Confirmar reserva
+
+        end
+
+    end
+
+end
+
+deactivate DB
+deactivate ReservaService
+deactivate API
+
+@enduml

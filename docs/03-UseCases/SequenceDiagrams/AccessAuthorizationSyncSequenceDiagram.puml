@@ -1,0 +1,173 @@
+@startuml AccessAuthorizationSyncSequenceDiagram
+
+title Access Authorization Synchronization Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Morador" as Morador
+
+participant "API" as API
+participant "Serviço de Reservas" as ReservationService
+participant "Serviço de Autorizações" as AuthorizationService
+participant "Serviço de Sincronização" as SyncService
+participant "Dispositivo de Acesso" as Device
+participant "Serviço de Auditoria" as AuditService
+database "Banco de Dados" as DB
+
+== Solicitação de autorização ==
+
+Morador -> API : Solicitar reserva ou acesso
+activate API
+
+API -> AuthorizationService : Avaliar necessidade de autorização
+activate AuthorizationService
+
+AuthorizationService -> DB : Consultar reserva, usuário e credencial
+activate DB
+DB --> AuthorizationService : Dados associados
+deactivate DB
+
+AuthorizationService -> ReservationService : Validar reserva e período
+activate ReservationService
+ReservationService --> AuthorizationService : Resultado da validação
+deactivate ReservationService
+
+alt Autorização não permitida
+
+    AuthorizationService --> API : Solicitação rejeitada
+    API --> Morador : Informar motivo
+
+else Autorização permitida
+
+    AuthorizationService -> DB : Criar autorização lógica Ativa
+    activate DB
+    DB --> AuthorizationService : Autorização persistida
+    deactivate DB
+
+    AuthorizationService -> DB : Registrar sincronização Pendente
+    activate DB
+    DB --> AuthorizationService : Estado registrado
+    deactivate DB
+
+    AuthorizationService -> AuditService : Registrar criação da autorização
+    activate AuditService
+    AuditService --> AuthorizationService : Evento registrado
+    deactivate AuditService
+
+    AuthorizationService --> API : Autorização criada
+    API --> Morador : Confirmar solicitação
+
+end
+
+deactivate AuthorizationService
+deactivate API
+
+== Sincronização com dispositivo ==
+
+SyncService -> DB : Buscar autorizações pendentes
+activate DB
+DB --> SyncService : Autorizações e dispositivos associados
+deactivate DB
+
+loop Para cada autorização pendente
+
+    SyncService -> SyncService : Validar estado atual e destino
+
+    SyncService -> Device : Enviar autorização autenticada
+    activate Device
+
+    alt Dispositivo confirma sincronização
+
+        Device --> SyncService : Confirmação válida
+        deactivate Device
+
+        SyncService -> DB : Atualizar sincronização para Sincronizado
+        activate DB
+        DB --> SyncService : Estado atualizado
+        deactivate DB
+
+        SyncService -> AuditService : Registrar sincronização
+        activate AuditService
+        AuditService --> SyncService : Evento registrado
+        deactivate AuditService
+
+    else Falha de comunicação ou rejeição
+
+        Device --> SyncService : Falha ou rejeição
+        deactivate Device
+
+        SyncService -> DB : Registrar falha e resultado da tentativa
+        activate DB
+        DB --> SyncService : Falha registrada
+        deactivate DB
+
+        opt Nova tentativa permitida
+
+            SyncService -> DB : Manter operação pendente para repetição
+            activate DB
+            DB --> SyncService : Operação registrada
+            deactivate DB
+
+        end
+
+    end
+
+end
+
+== Revogação ou expiração ==
+
+AuthorizationService -> DB : Detectar autorização revogada ou expirada
+activate DB
+DB --> AuthorizationService : Estado lógico atualizado
+deactivate DB
+
+AuthorizationService -> SyncService : Solicitar atualização no dispositivo
+activate SyncService
+
+SyncService -> Device : Enviar revogação ou invalidação
+activate Device
+
+alt Dispositivo confirma atualização
+
+    Device --> SyncService : Confirmação de invalidação
+    deactivate Device
+
+    SyncService -> DB : Registrar sincronização concluída
+    activate DB
+    DB --> SyncService : Estado atualizado
+    deactivate DB
+
+else Dispositivo indisponível
+
+    Device --> SyncService : Sem confirmação
+    deactivate Device
+
+    SyncService -> DB : Registrar falha de sincronização
+    activate DB
+    DB --> SyncService : Falha registrada
+    deactivate DB
+
+    SyncService -> AuditService : Registrar risco operacional
+    activate AuditService
+    AuditService --> SyncService : Evento registrado
+    deactivate AuditService
+
+end
+
+deactivate SyncService
+
+@enduml

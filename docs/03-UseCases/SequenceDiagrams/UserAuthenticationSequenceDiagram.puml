@@ -1,0 +1,103 @@
+@startuml UserAuthenticationSequenceDiagram
+
+title User Authentication Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Usuário" as User
+
+participant "API" as API
+participant "Serviço de Autenticação" as AuthService
+participant "Serviço de Usuários" as UserService
+participant "Hash de Senha" as PasswordHasher
+participant "Serviço de Token" as TokenService
+database "Banco de Dados" as DB
+
+User -> API : Enviar credenciais
+activate API
+
+API -> AuthService : Autenticar(credenciais)
+activate AuthService
+
+AuthService -> UserService : Buscar usuário por e-mail
+activate UserService
+
+UserService -> DB : Consultar usuário
+activate DB
+
+DB --> UserService : Dados do usuário
+deactivate DB
+
+alt Usuário não encontrado
+
+    UserService --> AuthService : Usuário inexistente
+    AuthService --> API : Credenciais inválidas
+    API --> User : Retornar erro de autenticação
+
+else Usuário encontrado
+
+    UserService --> AuthService : Dados do usuário
+    deactivate UserService
+
+    AuthService -> AuthService : Validar status do usuário
+
+    alt Usuário inativo
+
+        AuthService --> API : Usuário inativo
+        API --> User : Acesso negado
+
+    else Usuário ativo
+
+        AuthService -> PasswordHasher : Verificar senha
+        activate PasswordHasher
+
+        PasswordHasher --> AuthService : Resultado da verificação
+        deactivate PasswordHasher
+
+        alt Senha inválida
+
+            AuthService --> API : Credenciais inválidas
+            API --> User : Retornar erro de autenticação
+
+        else Senha válida
+
+            AuthService -> TokenService : Gerar token de autenticação
+            activate TokenService
+
+            TokenService -> TokenService : Validar claims e permissões
+            TokenService --> AuthService : Token gerado
+            deactivate TokenService
+
+            AuthService -> DB : Registrar último acesso
+            activate DB
+
+            DB --> AuthService : Registro atualizado
+            deactivate DB
+
+            AuthService --> API : Autenticação concluída + token
+            API --> User : Retornar token
+
+        end
+
+    end
+
+end
+
+deactivate AuthService
+deactivate API
+
+@enduml

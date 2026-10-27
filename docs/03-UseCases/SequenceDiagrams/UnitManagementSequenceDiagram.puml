@@ -1,0 +1,154 @@
+@startuml UnitManagementSequenceDiagram
+
+title Unit Management Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Administrador" as Administrador
+
+participant "API" as API
+participant "Autorização" as Auth
+participant "Serviço de Unidades" as UnitService
+participant "Validador de Unidade" as Validator
+database "Banco de Dados" as DB
+
+Administrador -> API : Solicitar operação de unidade
+activate API
+
+API -> Auth : Validar autenticação e permissões
+activate Auth
+
+Auth --> API : Autorização válida
+deactivate Auth
+
+API -> UnitService : Processar operação
+activate UnitService
+
+UnitService -> UnitService : Validar TenantID e escopo
+
+alt Consultar unidade
+
+    UnitService -> DB : Buscar unidade no tenant
+    activate DB
+
+    DB --> UnitService : Dados da unidade
+    deactivate DB
+
+    UnitService --> API : Unidade encontrada
+    API --> Administrador : Retornar dados
+
+else Criar unidade
+
+    UnitService -> Validator : Validar dados da unidade
+    activate Validator
+
+    Validator --> UnitService : Dados válidos
+    deactivate Validator
+
+    UnitService -> DB : Verificar combinação TenantID + Bloco + Número
+    activate DB
+
+    DB --> UnitService : Resultado da consulta
+
+    alt Unidade já cadastrada
+
+        UnitService --> API : Unidade já existente
+        API --> Administrador : Retornar erro
+
+    else Unidade disponível
+
+        UnitService -> DB : Criar unidade
+        DB --> UnitService : Unidade criada
+
+        UnitService --> API : Criação concluída
+        API --> Administrador : Confirmar operação
+
+    end
+
+    deactivate DB
+
+else Alterar unidade
+
+    UnitService -> DB : Buscar unidade
+    activate DB
+
+    DB --> UnitService : Dados atuais
+
+    alt Unidade inexistente
+
+        UnitService --> API : Unidade não encontrada
+        API --> Administrador : Retornar erro
+
+    else Unidade encontrada
+
+        UnitService -> Validator : Validar alterações
+        activate Validator
+
+        Validator --> UnitService : Alterações válidas
+        deactivate Validator
+
+        UnitService -> DB : Atualizar unidade
+        DB --> UnitService : Unidade atualizada
+
+        UnitService --> API : Alteração concluída
+        API --> Administrador : Confirmar operação
+
+    end
+
+    deactivate DB
+
+else Inativar unidade
+
+    UnitService -> DB : Buscar unidade
+    activate DB
+
+    DB --> UnitService : Dados atuais
+
+    alt Unidade inexistente
+
+        UnitService --> API : Unidade não encontrada
+        API --> Administrador : Retornar erro
+
+    else Unidade encontrada
+
+        UnitService -> UnitService : Validar possibilidade de inativação
+
+        alt Inativação permitida
+
+            UnitService -> DB : Registrar inativação
+            DB --> UnitService : Unidade inativada
+
+            UnitService --> API : Inativação concluída
+            API --> Administrador : Confirmar operação
+
+        else Inativação não permitida
+
+            UnitService --> API : Operação não permitida
+            API --> Administrador : Retornar erro
+
+        end
+
+    end
+
+    deactivate DB
+
+end
+
+deactivate UnitService
+deactivate API
+
+@enduml

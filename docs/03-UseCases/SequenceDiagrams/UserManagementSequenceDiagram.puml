@@ -1,0 +1,154 @@
+@startuml UserManagementSequenceDiagram
+
+title User Management Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Administrador" as Administrador
+
+participant "API" as API
+participant "Autorização" as Auth
+participant "Serviço de Usuários" as UserService
+participant "Validador de Usuário" as Validator
+database "Banco de Dados" as DB
+
+Administrador -> API : Solicitar operação de usuário
+activate API
+
+API -> Auth : Validar autenticação e permissões
+activate Auth
+
+Auth --> API : Autorização válida
+deactivate Auth
+
+API -> UserService : Processar operação
+activate UserService
+
+UserService -> UserService : Validar TenantID e escopo
+
+alt Consultar usuário
+
+    UserService -> DB : Buscar usuário no tenant
+    activate DB
+
+    DB --> UserService : Dados do usuário
+    deactivate DB
+
+    UserService --> API : Usuário encontrado
+    API --> Administrador : Retornar dados
+
+else Criar usuário
+
+    UserService -> Validator : Validar dados do usuário
+    activate Validator
+
+    Validator --> UserService : Dados válidos
+    deactivate Validator
+
+    UserService -> DB : Verificar e-mail existente
+    activate DB
+
+    DB --> UserService : Resultado da consulta
+
+    alt E-mail já cadastrado
+
+        UserService --> API : E-mail já utilizado
+        API --> Administrador : Retornar erro
+
+    else E-mail disponível
+
+        UserService -> DB : Criar usuário
+        DB --> UserService : Usuário criado
+
+        UserService --> API : Criação concluída
+        API --> Administrador : Confirmar operação
+
+    end
+
+    deactivate DB
+
+else Alterar usuário
+
+    UserService -> DB : Buscar usuário
+    activate DB
+
+    DB --> UserService : Dados atuais
+
+    alt Usuário inexistente
+
+        UserService --> API : Usuário não encontrado
+        API --> Administrador : Retornar erro
+
+    else Usuário encontrado
+
+        UserService -> Validator : Validar alterações
+        activate Validator
+
+        Validator --> UserService : Alterações válidas
+        deactivate Validator
+
+        UserService -> DB : Atualizar usuário
+        DB --> UserService : Usuário atualizado
+
+        UserService --> API : Alteração concluída
+        API --> Administrador : Confirmar operação
+
+    end
+
+    deactivate DB
+
+else Inativar usuário
+
+    UserService -> DB : Buscar usuário
+    activate DB
+
+    DB --> UserService : Dados atuais
+
+    alt Usuário inexistente
+
+        UserService --> API : Usuário não encontrado
+        API --> Administrador : Retornar erro
+
+    else Usuário encontrado
+
+        UserService -> UserService : Validar possibilidade de inativação
+
+        alt Inativação permitida
+
+            UserService -> DB : Registrar inativação
+            DB --> UserService : Usuário inativado
+
+            UserService --> API : Inativação concluída
+            API --> Administrador : Confirmar operação
+
+        else Inativação não permitida
+
+            UserService --> API : Operação não permitida
+            API --> Administrador : Retornar erro
+
+        end
+
+    end
+
+    deactivate DB
+
+end
+
+deactivate UserService
+deactivate API
+
+@enduml

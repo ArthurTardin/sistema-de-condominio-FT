@@ -1,0 +1,164 @@
+@startuml IoTDeviceManagementSequenceDiagram
+title Diagrama de Sequência — Gerenciamento de Dispositivos IoT
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+skinparam defaultFontColor #f8fafc
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor Administrador
+
+participant "API" as API
+participant "AuthService" as Auth
+participant "IoTDeviceService" as DeviceService
+database "Banco de Dados" as DB
+participant "AuditService" as Audit
+
+== Cadastro de dispositivo ==
+
+Administrador -> API : Cadastrar dispositivo IoT
+API -> Auth : Validar token, perfil e contexto do tenant
+Auth --> API : Resultado da validação
+
+alt Usuário não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Usuário autorizado
+    API -> DeviceService : Registrar dispositivo
+    DeviceService -> DeviceService : Validar campos obrigatórios,\ntipo e identificação
+
+    alt Dados inválidos
+        DeviceService --> API : Erros de validação
+        API --> Administrador : 400 Bad Request
+    else Dados válidos
+        DeviceService -> DB : Verificar unidade de identificação\núnica do dispositivo (MacAddress)
+        DB --> DeviceService : Resultado da consulta
+
+        alt MacAddress já cadastrado
+            DeviceService --> API : Identificação duplicada
+            API --> Administrador : 409 Conflict
+        else Identificação disponível
+            DeviceService -> DB : Validar vínculo dos recursos\nassociados ao tenant
+            DB --> DeviceService : Resultado da validação
+
+            alt Recurso inexistente ou de outro tenant
+                DeviceService --> API : Vínculo inválido
+                API --> Administrador : 400 Bad Request
+            else Vínculos válidos
+                DeviceService -> DB : Persistir dispositivo
+                DB --> DeviceService : Dispositivo persistido
+
+                DeviceService -> Audit : Registrar cadastro
+                Audit -> DB : Persistir registro de auditoria
+                DB --> Audit : Auditoria registrada
+                Audit --> DeviceService : Cadastro auditado
+
+                DeviceService --> API : Dispositivo cadastrado
+                API --> Administrador : 201 Created
+            end
+        end
+    end
+end
+
+== Consulta de dispositivos ==
+
+Administrador -> API : Consultar dispositivos
+API -> Auth : Validar token, perfil e tenant
+Auth --> API : Resultado da validação
+
+alt Usuário não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Usuário autorizado
+    API -> DeviceService : Listar dispositivos do tenant
+    DeviceService -> DB : Consultar dispositivos\nno escopo autorizado
+    DB --> DeviceService : Lista de dispositivos
+    DeviceService --> API : Resultado da consulta
+    API --> Administrador : 200 OK — Lista de dispositivos
+end
+
+== Atualização de dispositivo ==
+
+Administrador -> API : Atualizar dados do dispositivo
+API -> Auth : Validar token, perfil e tenant
+Auth --> API : Resultado da validação
+
+alt Usuário não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Usuário autorizado
+    API -> DeviceService : Atualizar dispositivo
+    DeviceService -> DB : Buscar dispositivo por ID\ne validar escopo do tenant
+    DB --> DeviceService : Dispositivo encontrado ou inexistente
+
+    alt Dispositivo inexistente ou fora do tenant
+        DeviceService --> API : Dispositivo não encontrado
+        API --> Administrador : 404 Not Found
+    else Dispositivo encontrado
+        DeviceService -> DeviceService : Validar alterações solicitadas
+
+        alt Dados inválidos
+            DeviceService --> API : Erros de validação
+            API --> Administrador : 400 Bad Request
+        else Dados válidos
+            opt MacAddress foi alterado
+                DeviceService -> DB : Verificar unicidade do novo MacAddress
+                DB --> DeviceService : Resultado da consulta
+            end
+
+            DeviceService -> DB : Persistir alterações válidas
+            DB --> DeviceService : Dispositivo atualizado
+
+            DeviceService -> Audit : Registrar atualização
+            Audit -> DB : Persistir registro de auditoria
+            DB --> Audit : Auditoria registrada
+            Audit --> DeviceService : Atualização auditada
+
+            DeviceService --> API : Dispositivo atualizado
+            API --> Administrador : 200 OK
+        end
+    end
+end
+
+== Inativação lógica de dispositivo ==
+
+Administrador -> API : Solicitar inativação do dispositivo
+API -> Auth : Validar token, perfil e tenant
+Auth --> API : Resultado da validação
+
+alt Usuário não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Usuário autorizado
+    API -> DeviceService : Inativar dispositivo
+    DeviceService -> DB : Buscar dispositivo por ID\ne validar escopo do tenant
+    DB --> DeviceService : Dispositivo encontrado ou inexistente
+
+    alt Dispositivo inexistente ou fora do tenant
+        DeviceService --> API : Dispositivo não encontrado
+        API --> Administrador : 404 Not Found
+    else Dispositivo encontrado
+        DeviceService -> DB : Marcar dispositivo como inativo\nsem excluir seu histórico
+        DB --> DeviceService : Inativação persistida
+
+        DeviceService -> Audit : Registrar inativação
+        Audit -> DB : Persistir registro de auditoria
+        DB --> Audit : Auditoria registrada
+        Audit --> DeviceService : Inativação auditada
+
+        DeviceService --> API : Dispositivo inativado
+        API --> Administrador : 200 OK
+    end
+end
+
+@enduml

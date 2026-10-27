@@ -1,0 +1,108 @@
+@startuml IoTAlertHandlingSequenceDiagram
+title Diagrama de Sequência — Processamento de Alertas IoT
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+skinparam defaultFontColor #f8fafc
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+participant "Dispositivo IoT" as Device
+participant "MQTT Broker" as MQTT
+participant "IoTMessageConsumer" as Consumer
+participant "IoTDeviceService" as DeviceService
+participant "TelemetryService" as Telemetry
+participant "AlertService" as Alert
+participant "TicketService" as Ticket
+database "Banco de Dados" as DB
+participant "NotificationService" as Notification
+
+== Recebimento do evento ==
+
+Device -> MQTT : Publicar telemetria ou evento\nno tópico do dispositivo
+MQTT -> Consumer : Entregar mensagem recebida
+
+Consumer -> DeviceService : Validar identidade e autorização\ndo dispositivo
+DeviceService -> DB : Consultar dispositivo registrado,\nativo e vinculado ao tenant
+DB --> DeviceService : Resultado da validação
+DeviceService --> Consumer : Resultado da autorização
+
+alt Dispositivo inválido ou inativo
+    Consumer -> Consumer : Rejeitar mensagem e registrar\nfalha de segurança conforme política
+else Dispositivo autorizado
+    Consumer -> Consumer : Validar formato, timestamp,\ntipo e identificador do evento
+
+    alt Mensagem malformada
+        Consumer -> Consumer : Rejeitar mensagem e registrar erro
+    else Mensagem válida
+        Consumer -> Telemetry : Processar evento recebido
+        Telemetry -> DB : Verificar idempotência do evento
+        DB --> Telemetry : Evento já processado ou novo
+
+        alt Evento duplicado
+            Telemetry --> Consumer : Evento já processado
+        else Evento novo
+            Telemetry -> DB : Persistir registro de telemetria
+            DB --> Telemetry : Telemetria persistida
+
+            Telemetry -> Alert : Avaliar limiares e regras de alerta
+            Alert -> DB : Consultar configuração aplicável\nao dispositivo ou recurso
+            DB --> Alert : Configuração encontrada
+
+            alt Nenhum limiar ou regra acionado
+                Alert --> Telemetry : Nenhum alerta necessário
+                Telemetry --> Consumer : Evento processado
+            else Condição de alerta identificada
+                Alert -> DB : Buscar alerta ativo correlacionável
+                DB --> Alert : Alerta existente ou inexistente
+
+                alt Alerta equivalente já ativo
+                    Alert -> DB : Atualizar ocorrência e dados\nconforme política de correlação
+                    DB --> Alert : Alerta atualizado
+                else Novo alerta
+                    Alert -> DB : Registrar novo alerta
+                    DB --> Alert : Alerta registrado
+                end
+
+                Alert -> Ticket : Avaliar necessidade de chamado
+                Ticket -> DB : Verificar chamado existente\nassociado ao alerta ou evento
+                DB --> Ticket : Resultado da consulta
+
+                alt Chamado existente e correlacionável
+                    Ticket -> DB : Vincular ou atualizar contexto\ndo chamado conforme regras
+                    DB --> Ticket : Chamado atualizado
+                else Chamado necessário e inexistente
+                    Ticket -> DB : Criar chamado do tipo AlarmeIoT\ncom estado inicial Aberto
+                    DB --> Ticket : Chamado persistido
+                    Ticket -> DB : Registrar histórico inicial do chamado
+                    DB --> Ticket : Histórico persistido
+                else Não é necessário abrir chamado
+                    Ticket --> Alert : Nenhum chamado criado
+                end
+
+                Alert -> Notification : Solicitar notificação do alerta
+                Notification -> DB : Registrar notificação conforme política
+                DB --> Notification : Registro persistido
+                Notification --> Alert : Solicitação processada
+
+                Alert --> Telemetry : Alerta processado
+                Telemetry --> Consumer : Evento processado
+            end
+        end
+    end
+end
+
+@enduml

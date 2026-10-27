@@ -1,0 +1,189 @@
+@startuml TicketLifecycleSequenceDiagram
+
+title Ticket Lifecycle Sequence Diagram
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+
+actor "Morador" as Morador
+actor "Funcionário" as Funcionario
+actor "Administrador" as Administrador
+participant "Sistema IoT" as IoT
+
+participant "API" as API
+participant "Autorização" as Auth
+participant "Serviço de Chamados" as TicketService
+participant "Monitor de SLA" as SLAMonitor
+participant "Serviço de Notificações" as NotificationService
+database "Banco de Dados" as DB
+
+alt Abertura manual
+
+    Morador -> API : Solicitar abertura de chamado
+    activate API
+
+    API -> Auth : Validar autenticação, permissões e tenant
+    activate Auth
+    Auth --> API : Contexto validado
+    deactivate Auth
+
+    API -> TicketService : Criar chamado(dados)
+    activate TicketService
+
+    TicketService -> TicketService : Validar dados e regras de negócio
+
+    alt Dados inválidos
+
+        TicketService --> API : Erros de validação
+        API --> Morador : Retornar erros
+
+    else Dados válidos
+
+        TicketService -> DB : Criar chamado com estado Aberto
+        activate DB
+        DB --> TicketService : Chamado criado
+        TicketService -> DB : Registrar histórico inicial
+        DB --> TicketService : Histórico registrado
+        deactivate DB
+
+        TicketService -> NotificationService : Solicitar notificações aplicáveis
+        activate NotificationService
+        NotificationService --> TicketService : Solicitação processada
+        deactivate NotificationService
+
+        TicketService --> API : Chamado registrado
+        API --> Morador : Confirmar abertura
+
+    end
+
+    deactivate TicketService
+    deactivate API
+
+else Abertura automática por alarme IoT
+
+    IoT -> TicketService : Solicitar chamado por alarme
+    activate TicketService
+
+    TicketService -> TicketService : Validar origem, dispositivo e tenant
+    TicketService -> DB : Consultar alarmes e chamados relacionados
+    activate DB
+    DB --> TicketService : Dados de correlação
+
+    alt Chamado equivalente já existe
+
+        TicketService -> DB : Registrar correlação ou atualização permitida
+        DB --> TicketService : Operação concluída
+
+    else Novo chamado necessário
+
+        TicketService -> DB : Criar chamado do tipo AlarmeIoT
+        DB --> TicketService : Chamado criado
+        TicketService -> DB : Registrar histórico inicial
+        DB --> TicketService : Histórico registrado
+
+    end
+
+    deactivate DB
+
+    TicketService -> NotificationService : Solicitar notificações aplicáveis
+    activate NotificationService
+    NotificationService --> TicketService : Solicitação processada
+    deactivate NotificationService
+
+    deactivate TicketService
+
+end
+
+opt Gerenciamento do chamado
+
+    Administrador -> API : Solicitar atribuição ou alteração de estado
+    activate API
+
+    API -> Auth : Validar permissão e tenant
+    activate Auth
+    Auth --> API : Contexto validado
+    deactivate Auth
+
+    API -> TicketService : Processar alteração(chamadoId, operação)
+    activate TicketService
+
+    TicketService -> DB : Consultar chamado e estado atual
+    activate DB
+    DB --> TicketService : Dados do chamado
+
+    TicketService -> TicketService : Validar transição permitida
+
+    alt Transição inválida
+
+        TicketService --> API : Operação não permitida
+        API --> Administrador : Retornar motivo
+
+    else Transição válida
+
+        TicketService -> DB : Atualizar estado ou responsável
+        DB --> TicketService : Alteração persistida
+
+        TicketService -> DB : Registrar histórico da transição
+        DB --> TicketService : Histórico persistido
+
+        TicketService -> SLAMonitor : Solicitar avaliação de SLA
+        activate SLAMonitor
+        SLAMonitor --> TicketService : Avaliação processada
+        deactivate SLAMonitor
+
+        TicketService -> NotificationService : Solicitar notificações aplicáveis
+        activate NotificationService
+        NotificationService --> TicketService : Solicitação processada
+        deactivate NotificationService
+
+        TicketService --> API : Alteração concluída
+        API --> Administrador : Confirmar operação
+
+    end
+
+    deactivate DB
+    deactivate TicketService
+    deactivate API
+
+end
+
+opt Consulta do histórico
+
+    Morador -> API : Consultar chamado e histórico
+    activate API
+
+    API -> Auth : Validar acesso ao chamado
+    activate Auth
+    Auth --> API : Autorização validada
+    deactivate Auth
+
+    API -> TicketService : Consultar histórico(chamadoId)
+    activate TicketService
+
+    TicketService -> DB : Buscar chamado e histórico
+    activate DB
+    DB --> TicketService : Dados e eventos históricos
+    deactivate DB
+
+    TicketService --> API : Histórico autorizado
+    API --> Morador : Exibir dados permitidos
+
+    deactivate TicketService
+    deactivate API
+
+end
+
+@enduml

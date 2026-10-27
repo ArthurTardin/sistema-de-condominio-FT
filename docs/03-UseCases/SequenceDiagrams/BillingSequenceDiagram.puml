@@ -1,0 +1,139 @@
+@startuml BillingSequenceDiagram
+title Diagrama de Sequência — Gestão de Cobranças
+
+skinparam backgroundColor #0f172a
+skinparam sequence {
+    BackgroundColor #0f172a
+    ArrowColor #94a3b8
+    ActorBackgroundColor #1e293b
+    ActorBorderColor #475569
+    ActorFontColor #f8fafc
+    ParticipantBackgroundColor #1e293b
+    ParticipantBorderColor #475569
+    ParticipantFontColor #f8fafc
+    LifeLineBorderColor #475569
+    LifeLineBackgroundColor #1e293b
+    BoxBackgroundColor #0f172a
+    BoxBorderColor #475569
+}
+skinparam defaultFontColor #f8fafc
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor Morador
+actor Administrador
+
+participant "API" as API
+participant "AuthService" as Auth
+participant "BillingService" as Billing
+database "Banco de Dados" as DB
+participant "NotificationService" as Notification
+participant "AuditService" as Audit
+
+== Consulta de cobranças pelo morador ==
+
+Morador -> API : Solicitar cobranças da unidade
+API -> Auth : Validar token e contexto do usuário
+Auth --> API : Identidade, perfil e TenantID
+
+alt Usuário não autenticado ou contexto inválido
+    API --> Morador : 401 Unauthorized
+else Usuário autenticado
+    API -> Billing : Consultar cobranças do morador
+    Billing -> Billing : Validar acesso à unidade
+    Billing -> DB : Consultar cobranças vinculadas\nà unidade autorizada
+    DB --> Billing : Lista de cobranças
+
+    alt Unidade sem cobranças
+        Billing --> API : Lista vazia
+        API --> Morador : 200 OK — Nenhuma cobrança encontrada
+    else Cobranças encontradas
+        Billing --> API : Cobranças e respectivos status
+        API --> Morador : 200 OK — Lista de cobranças
+    end
+end
+
+== Cadastro de cobrança pelo administrador ==
+
+Administrador -> API : Cadastrar cobrança
+API -> Auth : Validar token, perfil e tenant
+Auth --> API : Resultado da validação
+
+alt Administrador não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Administrador autorizado
+    API -> Billing : Registrar cobrança
+
+    Billing -> Billing : Validar valor, vencimento,\nunidade e dados obrigatórios
+
+    alt Dados inválidos
+        Billing --> API : Erros de validação
+        API --> Administrador : 400 Bad Request
+    else Dados válidos
+        Billing -> DB : Validar existência da unidade\ne vínculo com o tenant
+        DB --> Billing : Resultado da validação
+
+        alt Unidade inexistente ou fora do tenant
+            Billing --> API : Unidade inválida
+            API --> Administrador : 400 Bad Request
+        else Unidade válida
+            Billing -> DB : Persistir CobrancaCondominial
+            DB --> Billing : Cobrança persistida
+
+            Billing -> Audit : Registrar operação administrativa
+            Audit -> DB : Persistir registro de auditoria
+            DB --> Audit : Auditoria registrada
+            Audit --> Billing : Operação auditada
+
+            Billing -> Notification : Solicitar notificação da cobrança
+            Notification --> Billing : Solicitação processada
+
+            Billing --> API : Cobrança cadastrada
+            API --> Administrador : 201 Created
+        end
+    end
+end
+
+== Atualização de cobrança pelo administrador ==
+
+Administrador -> API : Solicitar atualização da cobrança
+API -> Auth : Validar token, perfil e tenant
+Auth --> API : Resultado da validação
+
+alt Administrador não autorizado
+    API --> Administrador : 401/403 — Acesso negado
+else Administrador autorizado
+    API -> Billing : Atualizar cobrança
+    Billing -> DB : Buscar cobrança pelo identificador\ne validar escopo do tenant
+    DB --> Billing : Cobrança encontrada ou inexistente
+
+    alt Cobrança inexistente ou fora do tenant
+        Billing --> API : Cobrança não encontrada
+        API --> Administrador : 404 Not Found
+    else Cobrança encontrada
+        Billing -> Billing : Validar alterações solicitadas
+
+        alt Alterações inválidas
+            Billing --> API : Erros de validação
+            API --> Administrador : 400 Bad Request
+        else Alterações válidas
+            Billing -> DB : Persistir alterações
+            DB --> Billing : Cobrança atualizada
+
+            Billing -> Audit : Registrar alteração administrativa
+            Audit -> DB : Persistir registro de auditoria
+            DB --> Audit : Auditoria registrada
+            Audit --> Billing : Alteração auditada
+
+            opt Alteração exige notificação
+                Billing -> Notification : Solicitar notificação aos envolvidos
+                Notification --> Billing : Solicitação processada
+            end
+
+            Billing --> API : Cobrança atualizada
+            API --> Administrador : 200 OK
+        end
+    end
+end
+
+@enduml
