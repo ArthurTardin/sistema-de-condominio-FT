@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SistemaCondominio.Api/SistemaCondominio.Api.csproj" />
+    <Project Path="src/SistemaCondominio.Application/SistemaCondominio.Application.csproj" />
+    <Project Path="src/SistemaCondominio.Domain/SistemaCondominio.Domain.csproj" />
+    <Project Path="src/SistemaCondominio.Infrastructure/SistemaCondominio.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SistemaCondominio.Api.Tests/SistemaCondominio.Api.Tests.csproj" />
+    <Project Path="tests/SistemaCondominio.Application.Tests/SistemaCondominio.Application.Tests.csproj" />
+    <Project Path="tests/SistemaCondominio.Domain.Tests/SistemaCondominio.Domain.Tests.csproj" />
+    <Project Path="tests/SistemaCondominio.Infrastructure.Tests/SistemaCondominio.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

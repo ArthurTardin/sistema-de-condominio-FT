@@ -1,0 +1,8 @@
+# .NET Build output
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+.vscode/
+appsettings.Development.json
