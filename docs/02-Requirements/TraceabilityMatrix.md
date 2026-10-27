@@ -163,4 +163,18 @@ Os testes devem ser definidos a partir dos requisitos e das regras de negócio. 
 | CT-LGPD | Acesso, retenção, anonimização e eliminação controlada | Segurança e conformidade |
 | CT-CLIENTES | Consistência entre Web, Mobile e Desktop | Funcional e integração |
 
-Os identificadores acima representam grupos de teste propostos. Eles não devem ser tratados como casos de teste já especificados ou executados.
+Os grupos acima representam a cobertura planejada para o produto completo. Para o MVP, os casos mínimos estão especificados em [`../07-Testing/MvpTestCases.md`](../07-Testing/MvpTestCases.md) e usam IDs estáveis como `CT-AUTH-01`, `CT-RES-02` e `CT-TICKET-03`.
+
+Até a implementação dos testes, a coluna de validação deve ser considerada **planejada**, não executada. Um requisito só poderá ser marcado como coberto quando houver um caso implementado, reproduzível e associado ao resultado da execução.
+
+### 8.1. Cobertura mínima do MVP
+
+| Área | Casos mínimos | Requisitos relacionados |
+|---|---|---|
+| Autenticação e autorização | `CT-AUTH-01`, `CT-AUTH-02`, `CT-TENANT-02` | RF02, RF15 |
+| Isolamento entre condomínios | `CT-TENANT-01`, `CT-TENANT-02` | RF01, RF01.1, RN04, RN06 |
+| Reservas | `CT-RES-01` a `CT-RES-04` | RF05, RF06, RF07, RF18, RNF04 |
+| Chamados e ocorrências | `CT-TICKET-01` a `CT-TICKET-04` | RF04, RF10, RF11, RF12, RF13, RF14 |
+| Auditoria e histórico | `CT-AUDIT-01` | RF14, RF25 |
+
+Essa tabela é o checklist de entrada do MVP. Funcionalidades financeiras, IoT, acesso físico, notificações multicanal e clientes mobile/desktop permanecem sem cobertura de MVP.
