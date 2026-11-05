@@ -1,8 +1,13 @@
-# .NET Build output
+# Build results
 [Bb]in/
 [Oo]bj/
+
+# Visual Studio files
+.vs/
 *.user
 *.suo
-.vs/
-.vscode/
+
+# .NET Core / ASP.NET Core local settings
+.env
+appsettings.json
 appsettings.Development.json
